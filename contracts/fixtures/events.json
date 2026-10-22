@@ -1,0 +1,99 @@
+[
+  {
+    "schema_version": "1.0",
+    "seq": 11,
+    "interview_id": "iv_demo",
+    "occurred_at": "2026-10-22T03:00:00Z",
+    "revision": 5,
+    "transcript_version": 2,
+    "generation": 2,
+    "type": "correction.applied",
+    "data": {
+      "correction_id": "cor_demo",
+      "utterance_id": "ut_1",
+      "utterance_revision": 2,
+      "invalidated_report_version": null
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "seq": 12,
+    "interview_id": "iv_demo",
+    "occurred_at": "2026-10-22T03:00:00Z",
+    "revision": 5,
+    "transcript_version": 2,
+    "generation": 2,
+    "type": "transcript.updated",
+    "data": {
+      "utterance_id": "ut_1",
+      "utterance_revision": 2,
+      "speaker": "candidate",
+      "text": "担当した期間は3年です。",
+      "status": "corrected",
+      "question_id": "q_experience",
+      "source": "voice",
+      "connection_id": "vc_demo",
+      "start_ms": 1000,
+      "end_ms": 2400
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "seq": 13,
+    "interview_id": "iv_demo",
+    "occurred_at": "2026-10-22T03:00:00Z",
+    "revision": 5,
+    "transcript_version": 2,
+    "generation": 2,
+    "type": "voice.closed",
+    "data": {
+      "connection_id": "vc_demo",
+      "finalization_confirmed": true,
+      "reason": "close_requested",
+      "usage_seconds": 1800
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "seq": 14,
+    "interview_id": "iv_demo",
+    "occurred_at": "2026-10-22T03:00:00Z",
+    "revision": 6,
+    "transcript_version": 2,
+    "generation": 2,
+    "type": "interview.updated",
+    "data": {
+      "state": "awaiting_confirmation",
+      "reason": "candidate_requested_finish",
+      "finalization_confirmed": true
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "seq": 15,
+    "interview_id": "iv_demo",
+    "occurred_at": "2026-10-22T03:00:00Z",
+    "revision": 7,
+    "transcript_version": 2,
+    "generation": 2,
+    "type": "report.updated",
+    "data": {
+      "status": "generating",
+      "report_version": null
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "seq": 16,
+    "interview_id": "iv_demo",
+    "occurred_at": "2026-10-22T03:00:00Z",
+    "revision": 8,
+    "transcript_version": 2,
+    "generation": 2,
+    "type": "report.updated",
+    "data": {
+      "status": "draft",
+      "report_version": 1
+    }
+  }
+]

@@ -1,0 +1,8 @@
+{
+  "expected_revision": 4,
+  "utterance_id": "ut_1",
+  "expected_utterance_revision": 1,
+  "replacement_text": "担当した期間は3年です。",
+  "reason": "期間の訂正",
+  "confirmed": true
+}

@@ -1,0 +1,16 @@
+{
+  "title": "架空の開発職向け面談",
+  "job_description": "架空のWeb開発職。実在企業・候補者を含まない。",
+  "questions": [
+    {
+      "question_id": "q_experience",
+      "text": "担当した期間を教えてください。",
+      "required": true
+    },
+    {
+      "question_id": "q_role",
+      "text": "担当した業務と役割を教えてください。",
+      "required": true
+    }
+  ]
+}

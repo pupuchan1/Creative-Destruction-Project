@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "interview_id": "iv_demo",
+  "report_version": 1,
+  "transcript_version": 2,
+  "generated_at": "2026-10-22T03:31:00Z",
+  "model": "gpt-6.1-sol",
+  "prompt_version": "report-ja-0.1",
+  "review_status": "draft",
+  "content": {
+    "questions": [
+      {
+        "question_id": "q_experience",
+        "status": "answered",
+        "summary": "担当期間は3年と回答し、当初の5年という発言を訂正した。",
+        "evidence": [
+          {
+            "utterance_id": "ut_1",
+            "utterance_revision": 2,
+            "quote": "担当した期間は3年です。"
+          }
+        ]
+      },
+      {
+        "question_id": "q_role",
+        "status": "unconfirmed",
+        "summary": "",
+        "evidence": []
+      }
+    ],
+    "follow_up": [
+      "担当した業務と役割を人が確認する。"
+    ],
+    "candidate_questions": [],
+    "limitations": [
+      "音声原本は保存していない。記録は候補者による訂正を反映した文字起こし。"
+    ]
+  }
+}

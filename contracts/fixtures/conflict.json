@@ -1,0 +1,9 @@
+{
+  "error": {
+    "code": "REVISION_CONFLICT",
+    "message": "最新の記録を取得して確認してください。",
+    "request_id": "req_demo",
+    "retryable": false,
+    "current_revision": 5
+  }
+}

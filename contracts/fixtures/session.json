@@ -1,0 +1,7 @@
+{
+  "subject_id": "sub_demo",
+  "role": "candidate",
+  "interview_id": "iv_demo",
+  "csrf_token": "synthetic-csrf-never-valid-00000000",
+  "expires_at": "2026-10-23T03:00:00Z"
+}

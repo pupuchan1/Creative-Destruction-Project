@@ -1,0 +1,12 @@
+{
+  "request_id": "del_demo",
+  "status": "running",
+  "requested_at": "2026-10-22T03:00:00Z",
+  "completed_at": null,
+  "app_data_deleted": false,
+  "provider_state_deleted": true,
+  "backup_expiry_at": null,
+  "retained_categories": [
+    "本文を含まない同意・監査記録は確定した保持方針に従う。"
+  ]
+}

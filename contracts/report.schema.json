@@ -1,0 +1,189 @@
+{
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "type": "string"
+    },
+    "interview_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "report_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "transcript_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "model": {
+      "type": "string"
+    },
+    "prompt_version": {
+      "type": "string"
+    },
+    "review_status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "stale",
+        "reviewed"
+      ]
+    },
+    "content": {
+      "type": "object",
+      "properties": {
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "question_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "answered",
+                  "unconfirmed"
+                ]
+              },
+              "summary": {
+                "type": "string",
+                "maxLength": 4000
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "utterance_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9_-]+$"
+                    },
+                    "utterance_revision": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "quote": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4000
+                    }
+                  },
+                  "required": [
+                    "utterance_id",
+                    "utterance_revision",
+                    "quote"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "question_id",
+              "status",
+              "summary",
+              "evidence"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "follow_up": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "candidate_questions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "maxLength": 20000
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "utterance_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9_-]+$"
+                    },
+                    "utterance_revision": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "quote": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4000
+                    }
+                  },
+                  "required": [
+                    "utterance_id",
+                    "utterance_revision",
+                    "quote"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "text",
+              "evidence"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        }
+      },
+      "required": [
+        "questions",
+        "follow_up",
+        "candidate_questions",
+        "limitations"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "interview_id",
+    "report_version",
+    "transcript_version",
+    "generated_at",
+    "model",
+    "prompt_version",
+    "review_status",
+    "content"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/haas/report.schema.json",
+  "title": "HaaS evidence report v0.1 — proposed contract"
+}
