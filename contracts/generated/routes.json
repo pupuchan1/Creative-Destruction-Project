@@ -1,0 +1,177 @@
+{
+  "createTemplateVersion": {
+    "method": "POST",
+    "path": "/template-versions",
+    "roles": [
+      "recruiter",
+      "tenant_admin"
+    ]
+  },
+  "listTemplateVersions": {
+    "method": "GET",
+    "path": "/template-versions",
+    "roles": [
+      "recruiter",
+      "tenant_admin"
+    ]
+  },
+  "exchangeStaffIdentity": {
+    "method": "POST",
+    "path": "/auth/exchange",
+    "roles": [
+      "recruiter",
+      "tenant_admin"
+    ]
+  },
+  "getAppSession": {
+    "method": "GET",
+    "path": "/session",
+    "roles": [
+      "candidate_self",
+      "recruiter",
+      "tenant_admin"
+    ]
+  },
+  "logoutSession": {
+    "method": "POST",
+    "path": "/auth/logout",
+    "roles": [
+      "candidate_self",
+      "recruiter",
+      "tenant_admin"
+    ]
+  },
+  "listInterviews": {
+    "method": "GET",
+    "path": "/interviews",
+    "roles": [
+      "recruiter",
+      "tenant_admin"
+    ]
+  },
+  "createInterview": {
+    "method": "POST",
+    "path": "/interviews",
+    "roles": [
+      "recruiter"
+    ]
+  },
+  "getTemplateVersion": {
+    "method": "GET",
+    "path": "/template-versions/{template_version_id}",
+    "roles": [
+      "recruiter",
+      "tenant_admin"
+    ]
+  },
+  "exchangeInvitation": {
+    "method": "POST",
+    "path": "/invites/exchange",
+    "roles": [
+      "invite_holder"
+    ]
+  },
+  "getInterview": {
+    "method": "GET",
+    "path": "/interviews/{interview_id}",
+    "roles": [
+      "candidate_self",
+      "assigned_recruiter"
+    ]
+  },
+  "createConsent": {
+    "method": "POST",
+    "path": "/interviews/{interview_id}/consents",
+    "roles": [
+      "candidate_self"
+    ]
+  },
+  "createVoiceSession": {
+    "method": "POST",
+    "path": "/interviews/{interview_id}/voice-sessions",
+    "roles": [
+      "candidate_self"
+    ]
+  },
+  "streamInterviewEvents": {
+    "method": "GET",
+    "path": "/interviews/{interview_id}/events",
+    "roles": [
+      "candidate_self",
+      "assigned_recruiter"
+    ]
+  },
+  "submitTextAnswer": {
+    "method": "POST",
+    "path": "/interviews/{interview_id}/answers",
+    "roles": [
+      "candidate_self"
+    ]
+  },
+  "submitCommand": {
+    "method": "POST",
+    "path": "/interviews/{interview_id}/commands",
+    "roles": [
+      "candidate_self"
+    ]
+  },
+  "correctUtterance": {
+    "method": "POST",
+    "path": "/interviews/{interview_id}/corrections",
+    "roles": [
+      "candidate_self"
+    ]
+  },
+  "reviewFinalizationGap": {
+    "method": "POST",
+    "path": "/interviews/{interview_id}/finalization-reviews",
+    "roles": [
+      "assigned_recruiter"
+    ]
+  },
+  "finishInterview": {
+    "method": "POST",
+    "path": "/interviews/{interview_id}/finish",
+    "roles": [
+      "candidate_self"
+    ]
+  },
+  "getReport": {
+    "method": "GET",
+    "path": "/interviews/{interview_id}/report",
+    "roles": [
+      "candidate_self",
+      "assigned_recruiter"
+    ]
+  },
+  "reviewReport": {
+    "method": "POST",
+    "path": "/interviews/{interview_id}/reviews",
+    "roles": [
+      "assigned_recruiter"
+    ]
+  },
+  "withdrawConsent": {
+    "method": "POST",
+    "path": "/interviews/{interview_id}/consent-withdrawal",
+    "roles": [
+      "candidate_self"
+    ]
+  },
+  "requestDeletion": {
+    "method": "POST",
+    "path": "/interviews/{interview_id}/deletion-requests",
+    "roles": [
+      "candidate_self",
+      "tenant_admin"
+    ]
+  },
+  "getDeletionStatus": {
+    "method": "GET",
+    "path": "/deletion-requests/{request_id}",
+    "roles": [
+      "candidate_self",
+      "tenant_admin"
+    ]
+  }
+}

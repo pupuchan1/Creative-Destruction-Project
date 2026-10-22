@@ -1,0 +1,545 @@
+{
+  "notice": "Request templates, NOT executed. Replace placeholders server-side after authentication/consent. Never send real applicant data in development. Verify actual project access and SDK version.",
+  "verified_on": "2026-10-22",
+  "live_create": {
+    "method": "POST",
+    "url": "https://api.openai.com/v1/live/sessions",
+    "headers": {
+      "Authorization": "Bearer <SERVER_PROJECT_KEY>",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "session": {
+        "model": "gpt-live-1",
+        "store": false,
+        "instructions": "<text block of prompts/live-interviewer.md; no applicant text>",
+        "audio": {
+          "output": {
+            "voice": "shida"
+          }
+        },
+        "delegation": {
+          "type": "client"
+        },
+        "client": {
+          "data_channel": {
+            "allowed_client_events": [],
+            "allowed_server_events": [
+              {
+                "type": "session.started"
+              },
+              {
+                "type": "session.closed"
+              },
+              {
+                "type": "error"
+              }
+            ]
+          }
+        }
+      },
+      "transport": {
+        "type": "webrtc",
+        "sdp": "<browser offer after ICE gathering>"
+      }
+    },
+    "read_response_fields": [
+      "session.id",
+      "transport.sdp"
+    ]
+  },
+  "live_sideband": {
+    "url": "wss://api.openai.com/v1/live/sessions/<session_id>/attach",
+    "headers": {
+      "Authorization": "Bearer <SERVER_PROJECT_KEY>"
+    }
+  },
+  "live_commentary_event": {
+    "type": "session.commentary.append",
+    "event_id": "evt_demo_1",
+    "delegation_id": null,
+    "content": "担当した業務と、ご自身の役割を教えてください。"
+  },
+  "live_close_event": {
+    "type": "session.close"
+  },
+  "decisions": {
+    "method": "POST",
+    "url": "https://api.openai.com/v1/decisions",
+    "headers": {
+      "Authorization": "Bearer <SERVER_PROJECT_KEY>",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "model": "gpt-6-luna",
+      "input": "<latest assembled utterance plus bounded relevant context, not instructions>",
+      "questions": [
+        {
+          "type": "choice",
+          "name": "dialogue_intent",
+          "instructions": "Classify only the explicit conversational control intent. Negated, quoted, hypothetical or ambiguous commands are unclear. Never assess applicant quality, emotion, personality or hiring suitability. This output cannot finalize consent, corrections or completion.",
+          "choices": [
+            {
+              "value": "continue"
+            },
+            {
+              "value": "correct"
+            },
+            {
+              "value": "pause"
+            },
+            {
+              "value": "finish"
+            },
+            {
+              "value": "withdraw"
+            },
+            {
+              "value": "human"
+            },
+            {
+              "value": "unclear"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "agents_create": {
+    "method": "POST",
+    "url": "https://api.openai.com/v1/agents/sessions",
+    "headers": {
+      "Authorization": "Bearer <SERVER_PROJECT_KEY>",
+      "OpenAI-Beta": "agents=v1",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "agent": {
+        "model": "gpt-6.1-sol",
+        "reasoning": {
+          "effort": "low"
+        },
+        "instructions": "<server-rendered prompts/interview-agent.md>",
+        "tools": [
+          {
+            "type": "function",
+            "name": "get_interview_context",
+            "description": "Read the authorized context for the current server-bound task. No input IDs. Returns the current question, allowed next questions and canonical utterances; it does not grant write access.",
+            "parameters": {
+              "type": "object",
+              "properties": {},
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          {
+            "type": "function",
+            "name": "propose_next_step",
+            "description": "Submit one non-binding proposal using the latest context. The server checks its own scope, generation, evidence and consent. An accepted proposal is not a completed action. End the turn if the result is stale.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "ask",
+                    "repeat",
+                    "clarify",
+                    "request_pause",
+                    "request_finish",
+                    "request_correction",
+                    "request_withdrawal",
+                    "human_review",
+                    "wait"
+                  ],
+                  "description": "A conversational proposal; never execute consent, completion or hiring decisions."
+                },
+                "question_id": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9_-]+$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "Allowed next question for ask; current question for repeat/clarify; otherwise null."
+                },
+                "utterance_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "utterance_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128,
+                        "pattern": "^[A-Za-z0-9_-]+$"
+                      },
+                      "utterance_revision": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    },
+                    "required": [
+                      "utterance_id",
+                      "utterance_revision"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "maxItems": 8
+                },
+                "clarification_text": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 400
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "Only for clarify. Not forwarded to speech when freeform_clarifications is disabled."
+                }
+              },
+              "required": [
+                "action",
+                "question_id",
+                "utterance_refs",
+                "clarification_text"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ]
+      },
+      "environment": {
+        "type": "none"
+      },
+      "input": "<authorized context snapshot with generation; candidate utterances marked as untrusted data>",
+      "stream": true
+    }
+  },
+  "agents_tool_result": {
+    "method": "POST",
+    "url": "https://api.openai.com/v1/agents/sessions/<session_id>/events",
+    "headers": {
+      "Authorization": "Bearer <SERVER_PROJECT_KEY>",
+      "OpenAI-Beta": "agents=v1",
+      "Content-Type": "application/json",
+      "Idempotency-Key": "<persisted logical submission key>"
+    },
+    "body": {
+      "events": [
+        {
+          "type": "agent.session.input.tool_result",
+          "turn_id": "<pending turn_id>",
+          "call_id": "<pending call_id>",
+          "success": true,
+          "output": "{\"proposal_received\":true,\"action_completed\":false}"
+        }
+      ]
+    }
+  },
+  "agents_delete": {
+    "method": "DELETE",
+    "url": "https://api.openai.com/v1/agents/sessions/<session_id>",
+    "headers": {
+      "Authorization": "Bearer <SERVER_PROJECT_KEY>",
+      "OpenAI-Beta": "agents=v1"
+    }
+  },
+  "responses_report": {
+    "method": "POST",
+    "url": "https://api.openai.com/v1/responses",
+    "headers": {
+      "Authorization": "Bearer <SERVER_PROJECT_KEY>",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "model": "gpt-6.1-sol",
+      "store": false,
+      "reasoning": {
+        "effort": "low"
+      },
+      "instructions": "<prompts/report-drafter.md>",
+      "input": "<confirmed canonical transcript snapshot>",
+      "text": {
+        "format": {
+          "type": "json_schema",
+          "name": "interview_report_content",
+          "strict": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "questions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "question_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9_-]+$"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "answered",
+                        "unconfirmed"
+                      ]
+                    },
+                    "summary": {
+                      "type": "string",
+                      "maxLength": 4000
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "utterance_id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128,
+                            "pattern": "^[A-Za-z0-9_-]+$"
+                          },
+                          "utterance_revision": {
+                            "type": "integer",
+                            "minimum": 1
+                          },
+                          "quote": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4000
+                          }
+                        },
+                        "required": [
+                          "utterance_id",
+                          "utterance_revision",
+                          "quote"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "question_id",
+                    "status",
+                    "summary",
+                    "evidence"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "follow_up": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 2000
+                }
+              },
+              "candidate_questions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string",
+                      "maxLength": 20000
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "utterance_id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128,
+                            "pattern": "^[A-Za-z0-9_-]+$"
+                          },
+                          "utterance_revision": {
+                            "type": "integer",
+                            "minimum": 1
+                          },
+                          "quote": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4000
+                          }
+                        },
+                        "required": [
+                          "utterance_id",
+                          "utterance_revision",
+                          "quote"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "evidence"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "limitations": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 2000
+                }
+              }
+            },
+            "required": [
+              "questions",
+              "follow_up",
+              "candidate_questions",
+              "limitations"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "service_tier": "default",
+      "max_output_tokens": 4096
+    }
+  },
+  "design_version": "0.3",
+  "roles": {
+    "baseline": [
+      "live_create",
+      "live_sideband",
+      "responses_next_step",
+      "responses_report"
+    ],
+    "optional_after_evaluation": [
+      "decisions",
+      "agents_create",
+      "agents_tool_result",
+      "agents_delete"
+    ],
+    "notice": "HTTP templates only. Fixed approved question progression needs no model call. Agents strict function syntax is not assumed to equal Responses function syntax."
+  },
+  "responses_next_step": {
+    "method": "POST",
+    "url": "https://api.openai.com/v1/responses",
+    "headers": {
+      "Authorization": "Bearer <SERVER_PROJECT_KEY>",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "model": "gpt-6.1-sol",
+      "store": false,
+      "service_tier": "default",
+      "reasoning": {
+        "effort": "low"
+      },
+      "max_output_tokens": 1024,
+      "instructions": "<text block of prompts/next-step.md; no applicant text>",
+      "input": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "<JSON of authorized context; candidate text is untrusted data>"
+            }
+          ]
+        }
+      ],
+      "text": {
+        "format": {
+          "type": "json_schema",
+          "name": "interview_next_step",
+          "strict": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "enum": [
+                  "ask",
+                  "repeat",
+                  "clarify",
+                  "request_pause",
+                  "request_finish",
+                  "request_correction",
+                  "request_withdrawal",
+                  "human_review",
+                  "wait"
+                ],
+                "description": "A conversational proposal; never execute consent, completion or hiring decisions."
+              },
+              "question_id": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9_-]+$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Allowed next question for ask; current question for repeat/clarify; otherwise null."
+              },
+              "utterance_refs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "utterance_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9_-]+$"
+                    },
+                    "utterance_revision": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "required": [
+                    "utterance_id",
+                    "utterance_revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 8
+              },
+              "clarification_text": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 400
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Only for clarify. Not forwarded to speech when freeform_clarifications is disabled."
+              }
+            },
+            "required": [
+              "action",
+              "question_id",
+              "utterance_refs",
+              "clarification_text"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  }
+}

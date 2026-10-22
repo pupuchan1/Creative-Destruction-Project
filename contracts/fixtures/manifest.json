@@ -1,0 +1,54 @@
+[
+  {
+    "file": "interview.json",
+    "schema": "InterviewSnapshot"
+  },
+  {
+    "file": "correction-request.json",
+    "schema": "CorrectionCreate"
+  },
+  {
+    "file": "correction-response.json",
+    "schema": "InterviewSnapshot"
+  },
+  {
+    "file": "finish-request.json",
+    "schema": "FinishCreate"
+  },
+  {
+    "file": "review-request.json",
+    "schema": "ReviewCreate"
+  },
+  {
+    "file": "conflict.json",
+    "schema": "Error"
+  },
+  {
+    "file": "deletion-status.json",
+    "schema": "DeletionStatus"
+  },
+  {
+    "file": "template-request.json",
+    "schema": "TemplateCreate"
+  },
+  {
+    "file": "invitation-response.json",
+    "schema": "InterviewInvitation"
+  },
+  {
+    "file": "consent-request.json",
+    "schema": "ConsentCreate"
+  },
+  {
+    "file": "voice-answer.json",
+    "schema": "VoiceAnswer"
+  },
+  {
+    "file": "report-job.json",
+    "schema": "ReportJob"
+  },
+  {
+    "file": "session.json",
+    "schema": "AppSession"
+  }
+]
