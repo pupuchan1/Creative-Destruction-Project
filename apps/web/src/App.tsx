@@ -11,7 +11,7 @@ function Brand() {
         H
       </span>
       <span>
-        HaaS<small>採用対話</small>
+        HaaS<small>HUMAN AS A SERVICE</small>
       </span>
     </Link>
   );
@@ -78,52 +78,40 @@ function AdminLayout() {
       <a className="skip-link" href="#main">
         本文へ移動
       </a>
-      <aside className="sidebar">
+      <header className="site-header">
         <Brand />
-        <div className="workspace-name">
-          <span className="workspace-avatar">S</span>
-          <div>
-            サンプル株式会社<small>採用ワークスペース</small>
-          </div>
-        </div>
-        <p className="nav-caption">WORKSPACE</p>
         <nav aria-label="メインナビゲーション">
           <NavLink end to="/">
-            <span aria-hidden="true">◫</span>概要
+            概要
           </NavLink>
-          <NavLink to="/jobs">
-            <span aria-hidden="true">▤</span>求人・質問設定
-          </NavLink>
-          <NavLink to="/interviews">
-            <span aria-hidden="true">☷</span>面談一覧
-          </NavLink>
-          <NavLink to="/settings/members">
-            <span aria-hidden="true">♧</span>メンバー・権限
-          </NavLink>
+          <NavLink to="/jobs">求人・質問設定</NavLink>
+          <NavLink to="/interviews">面談一覧</NavLink>
+          <NavLink to="/settings/members">メンバー・権限</NavLink>
         </nav>
-        <div className="sidebar-bottom">
-          <Link to="/candidate/demo">
-            候補者のサンプル画面 <span aria-hidden="true">↗</span>
+        <div className="header-actions">
+          <Link className="text-link" to="/candidate/demo">
+            候補者の画面 <span aria-hidden="true">↗</span>
           </Link>
-          <Link to="/login">ログイン画面へ</Link>
-          <p>HaaS / SCREEN PROTOTYPE</p>
-        </div>
-      </aside>
-      <div className="workspace-body">
-        <header className="topbar">
-          <span>
-            サンプル株式会社 <span className="muted">/ 採用管理</span>
-          </span>
-          <span className="user-avatar" aria-label="サンプルユーザー">
+          <Link className="account-link" to="/login" aria-label="ログイン画面へ">
             S
+          </Link>
+        </div>
+      </header>
+      <div className="workspace-body">
+        <div className="workspace-bar">
+          <span>
+            <span className="dot" /> サンプル株式会社 <span className="muted">/ 採用管理</span>
           </span>
-        </header>
+          <span className="workspace-label">HIRING WORKSPACE</span>
+        </div>
         <main id="main" className="admin-main">
           <Notice />
           <Outlet />
         </main>
         <footer className="workspace-footer">
-          HaaS <span>人を知るための対話を、もっと自然に。</span>
+          <strong>HaaS</strong>
+          <span>人を知るための対話を、もっと自然に。</span>
+          <span className="footer-label">HUMAN AS A SERVICE.</span>
         </footer>
       </div>
     </div>
@@ -155,7 +143,7 @@ function InterviewTable() {
               </td>
               <td>{interview.job}</td>
               <td>
-                <span className={`badge ${interview.status === 'review_pending' ? 'green' : ''}`}>
+                <span className={`badge ${interview.status === 'review_pending' ? 'blue' : ''}`}>
                   {interviewStatusLabels[interview.status]}
                 </span>
               </td>
@@ -185,15 +173,28 @@ function InterviewTable() {
 function Overview() {
   return (
     <>
-      <Heading
-        eyebrow="OVERVIEW"
-        title="採用の、今を見渡す。"
-        description="候補者との対話と、次のアクションをひとつの場所に。"
-      >
-        <Link className="button primary" to="/interviews/invite">
-          ＋ 候補者を招待
-        </Link>
-      </Heading>
+      <div className="overview-hero">
+        <Heading
+          eyebrow="01 / HIRING OVERVIEW"
+          title="採用の、今を見渡す。"
+          description="候補者との対話と、次のアクションをひとつの場所に。"
+        >
+          <Link className="button primary" to="/interviews/invite">
+            候補者を招待 <span aria-hidden="true">↗</span>
+          </Link>
+        </Heading>
+        <div className="overview-note">
+          <span className="eyebrow">YOUR NEXT STEP</span>
+          <p>
+            対話を、
+            <br />
+            <strong>次の出会いへ。</strong>
+          </p>
+          <Link to="/interviews" className="text-link">
+            確認待ちの記録を見る →
+          </Link>
+        </div>
+      </div>
       <div className="stats">
         <div className="stat">
           <p>面談サンプル</p>
@@ -212,7 +213,7 @@ function Overview() {
           <small>サンプル記録を閲覧できます</small>
         </div>
         <div className="stat">
-          <p>公開中の求人サンプル</p>
+          <p>求人サンプル</p>
           <strong>
             1<span>件</span>
           </strong>
@@ -232,6 +233,9 @@ function Overview() {
         <InterviewTable />
       </section>
       <section className="intro-card">
+        <span className="intro-index" aria-hidden="true">
+          02
+        </span>
         <div>
           <p className="eyebrow">CANDIDATE EXPERIENCE</p>
           <h2>候補者には、こんな体験を。</h2>
@@ -255,7 +259,7 @@ function Jobs() {
       />
       <section className="card job-card">
         <div className="section-heading">
-          <span className="badge green">サンプル求人</span>
+          <span className="badge blue">サンプル求人</span>
           <span className="muted">JOB 01</span>
         </div>
         <h2>プロダクトデザイナー</h2>
@@ -392,7 +396,7 @@ function Report() {
         title={`${interview.candidate}の面談記録`}
         description="架空の記録です。音声やAIから生成した結果ではありません。"
       >
-        <span className="badge green">サンプル記録</span>
+        <span className="badge blue">サンプル記録</span>
       </Heading>
       <div className="two-columns report-columns">
         <section className="card">
@@ -450,7 +454,7 @@ function Members() {
             <strong>サンプル管理者</strong>
             <p className="muted">架空のメンバー</p>
           </div>
-          <span className="badge green">管理者</span>
+          <span className="badge blue">管理者</span>
         </div>
         <div className="card-actions">
           <UnavailableButton>メンバーを追加</UnavailableButton>
@@ -462,26 +466,40 @@ function Members() {
 
 function Login() {
   return (
-    <div className="standalone">
+    <div className="standalone login-shell">
       <header>
         <Brand />
         <span className="badge">画面確認用</span>
       </header>
       <main className="login-card">
-        <p className="eyebrow">WELCOME TO HAAS</p>
-        <h1 tabIndex={-1}>
-          対話の先に、
-          <br />
-          人が見える採用を。
-        </h1>
-        <p className="muted">企業向け採用ワークスペース</p>
-        <div className="info-box">
-          ログインは現在利用できません。メールアドレスやパスワードの入力は不要です。
+        <div className="login-story">
+          <p className="eyebrow">HUMAN AS A SERVICE.</p>
+          <h1 tabIndex={-1}>
+            対話の先に、
+            <br />
+            <span className="accent">人が見える</span>採用を。
+          </h1>
+          <p className="muted">
+            一人ひとりの言葉を、次の出会いにつなぐ。
+            <br />
+            HaaSの採用ワークスペース。
+          </p>
+          <div className="login-signature" aria-hidden="true">
+            H<span>aa</span>S<span className="signature-dot">.</span>
+          </div>
         </div>
-        <UnavailableButton className="button primary full-width">ログイン</UnavailableButton>
-        <Link className="button secondary full-width" to="/">
-          サンプル画面を開く →
-        </Link>
+        <section className="login-panel">
+          <p className="eyebrow">WORKSPACE ACCESS</p>
+          <h2>ワークスペースへ</h2>
+          <div className="info-box">
+            ログインは現在利用できません。メールアドレスやパスワードの入力は不要です。
+          </div>
+          <UnavailableButton className="button primary full-width">ログイン</UnavailableButton>
+          <Link className="button secondary full-width" to="/">
+            サンプル画面を開く →
+          </Link>
+          <p className="field-help">現在は画面確認用のサンプルをお試しいただけます。</p>
+        </section>
       </main>
       <p className="standalone-foot">HaaS 採用対話 / SCREEN PROTOTYPE</p>
     </div>
@@ -509,7 +527,7 @@ function CandidateLayout() {
           企業画面へ戻る
         </Link>
       </header>
-      <main id="main" className="candidate-main">
+      <main id="main" className={`candidate-main candidate-step-${step}`}>
         <Notice />
         <ol className="steps" aria-label="面談の流れ">
           {candidateSteps.map((name, i) => (
@@ -518,7 +536,7 @@ function CandidateLayout() {
               className={i === step ? 'current' : i < step ? 'past' : ''}
               aria-current={i === step ? 'step' : undefined}
             >
-              <span>{i < step ? '✓' : i + 1}</span>
+              <span>{i < step ? '✓' : String(i + 1).padStart(2, '0')}</span>
               {name}
             </li>
           ))}
@@ -532,24 +550,46 @@ function CandidateLayout() {
 
 function CandidateIntro() {
   return (
-    <section className="card candidate-card">
-      <span className="badge green">サンプル株式会社</span>
-      <p className="eyebrow spaced">A CONVERSATION ABOUT YOU</p>
-      <h1 tabIndex={-1}>
-        あなたの経験を、
-        <br />
-        あなたの言葉で。
-      </h1>
-      <p className="muted">プロダクトデザイナー / 事前ヒアリング</p>
-      <p>
-        これまで取り組んできたこと、これから挑戦したいこと。対話を通じて、あなたの経験を伺います。
-      </p>
+    <section className="card candidate-card candidate-intro">
+      <div className="candidate-hero">
+        <div className="candidate-copy">
+          <span className="badge blue">サンプル株式会社</span>
+          <p className="eyebrow spaced">A CONVERSATION ABOUT YOU</p>
+          <h1 tabIndex={-1}>
+            あなたの経験を、
+            <br />
+            <span className="accent">あなたの言葉で。</span>
+          </h1>
+          <p className="muted">プロダクトデザイナー / 事前ヒアリング</p>
+          <p>
+            これまで取り組んできたこと、これから挑戦したいこと。対話を通じて、あなたの経験を伺います。
+          </p>
+          <Link className="button primary" to="/candidate/demo/check">
+            利用前の確認へ <span aria-hidden="true">↗</span>
+          </Link>
+        </div>
+        <div className="candidate-visual" aria-hidden="true">
+          <div className="visual-caption">LISTEN. UNDERSTAND. CONNECT.</div>
+          <div className="blue-orb">
+            <i />
+            <i />
+            <i />
+          </div>
+          <span className="visual-number">H / 01</span>
+        </div>
+      </div>
       <div className="feature-grid">
         <div>
+          <span className="feature-number" aria-hidden="true">
+            01
+          </span>
           <strong>自分のペースで</strong>
           <p>考えながら、言い直しても大丈夫。</p>
         </div>
         <div>
+          <span className="feature-number" aria-hidden="true">
+            02
+          </span>
           <strong>人が記録を確認</strong>
           <p>担当者が内容を確認し、次へ進めます。</p>
         </div>
@@ -557,9 +597,6 @@ function CandidateIntro() {
       <div className="info-box">
         現在は画面の流れだけを確認できます。音声の送信・録音・応募は行いません。
       </div>
-      <Link className="button primary full-width" to="/candidate/demo/check">
-        利用前の確認へ →
-      </Link>
     </section>
   );
 }

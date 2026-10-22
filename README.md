@@ -53,6 +53,10 @@ docs/                 画面一覧とセキュリティ上の実装境界
 
 画面一覧は [画面遷移](docs/navigation.md)、暗号化通信・認証の実装境界は [セキュリティ](docs/security.md) を参照してください。元資料は [HaaSの構成案](https://chatgpt.com/space/page_f073c7c45d90819197148460c40342d8) です。
 
+## デザイン
+
+画面の配色と形状の参照元は [デザイン](docs/design.md) に記載しています。
+
 ## セキュリティ更新
 
 Nodeの最低バージョンを `engines` と実行時チェックで制限し、`.nvmrc`・`.node-version`・CIを揃えています。依存は正確なバージョンとlockfileで固定します。CIで型検査・テスト・ビルド・`npm audit` を行い、Dependabotで更新PRを受け取ります。
