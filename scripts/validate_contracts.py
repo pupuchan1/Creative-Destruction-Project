@@ -1,5 +1,6 @@
 """Offline contract checks; no OpenAI calls or application runtime tests."""
 import copy
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -46,6 +47,10 @@ report = read(C / 'fixtures/report.json')
 report_validator = Draft202012Validator(report_schema, format_checker=FormatChecker())
 report_validator.validate(report)
 snapshot = read(C / 'fixtures/correction-response.json')
+policy = snapshot['consent_document']
+canonical = json.dumps({k:v for k,v in policy.items() if k != 'policy_hash'},
+                       ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode()
+assert hashlib.sha256(canonical).hexdigest() == policy['policy_hash']
 utterances = {u['utterance_id']: u for u in snapshot['utterances']}
 assert report['transcript_version'] == snapshot['transcript_version']
 for question in report['content']['questions']:
@@ -80,6 +85,35 @@ assert provider['agents_create']['body']['environment']['type'] == 'none'
 assert provider['responses_report']['body']['store'] is False
 assert provider['responses_report']['body']['text']['format']['schema'] == report_schema['properties']['content']
 
+scenario_count = 0
+for path in (C / 'scenarios').glob('*.json'):
+    scenario = read(path)
+    app_validator('InterviewSnapshot').validate(scenario['initial_snapshot'])
+    for step in scenario['steps']:
+        app_validator('InterviewSnapshot').validate(step['snapshot'])
+        if step['kind'] == 'api':
+            operation = next(op for op in operations if op['operationId'] == step['operation'])
+            if 'requestBody' in operation:
+                schema = operation['requestBody']['content']['application/json']['schema']
+                Draft202012Validator({**schema,'components':api['components']}).validate(step['request'])
+            schema = operation['responses'][str(step['response']['status'])]['content']['application/json']['schema']
+            if schema.get('$ref') == './report.schema.json':
+                report_validator.validate(step['response']['body'])
+            else:
+                Draft202012Validator({**schema,'components':api['components']}).validate(step['response']['body'])
+    for event in scenario['events']:
+        event_validator.validate(event)
+    if scenario['final_report'] is not None:
+        report_validator.validate(scenario['final_report'])
+    scenario_count += 1
+assert scenario_count == 4, 'Expected four executable Web scenarios'
+intent_cases = read(C / 'evaluations/dialogue-intents.json')['cases']
+allowed_intents = {c['value'] for c in provider['decisions']['body']['questions'][0]['choices']}
+assert len({c['id'] for c in intent_cases}) == len(intent_cases)
+for case in intent_cases:
+    assert set(case['expected']) <= allowed_intents and case['expected']
+    assert case['must_not_finalize'] is True
+
 links = 0
 for md in ROOT.rglob('*.md'):
     for target in re.findall(r'\]\(([^)]+)\)', md.read_text()):
@@ -91,5 +125,6 @@ for md in ROOT.rglob('*.md'):
 print(f'PASS: OpenAPI {len(api["paths"])} paths / {len(operations)} operations; '
       f'{len(manifest)} request/response fixtures; {len(events)} SSE events; '
       f'report evidence; 4 invalid-shape checks; provider-template consistency; '
-      f'{links} local links.')
+      f'{scenario_count} Web scenarios; {len(intent_cases)} evaluation cases (not model-run); '
+      f'consent hash; {links} local links.')
 print('NOT TESTED: live APIs, microphone audio, latency, billing, auth/RLS/CSRF, deletion, E2E.')

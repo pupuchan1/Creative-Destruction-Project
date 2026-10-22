@@ -2,7 +2,7 @@
 
 採用向けの音声対話・記録・人による確認をつなぐプロダクトの設計リポジトリです。
 
-## API接続設計 v0.1（2026-10-22）
+## API接続設計 v0.2（2026-10-22）
 
 **レビュー用提案です。実装済み・本番承認済みの仕様ではありません。** 既存の共有Space「HaaS｜採用対話プロダクト」のMVP案・Web構成案を引き継ぎ、接続契約を具体化しました。11月30日は初期機能の完成を目指す目安であり、確定納期として扱いません。
 
@@ -16,9 +16,11 @@
 4. [OpenAI APIの確認結果・認証・料金・制約](04-openai-api-reference.md)
 5. [同意・プライバシー・アクセス制御・公平性](05-privacy-security-fairness.md)
 6. [受け入れ条件・分担案・残る判断](06-acceptance-and-handoff.md)
+7. [動く契約モデル・Web用の型と操作例](08-contract-lab.md)
+8. [同時実行・課金・運用・構成の判断](09-operational-decisions.md)
 
-Web側は [OpenAPI 3.1](../contracts/openapi.json)、[SSEイベントスキーマ](../contracts/events.schema.json)、[レポートスキーマ](../contracts/report.schema.json)、[架空データ](../contracts/fixtures/)から画面・モック接続を開始できます。OpenAPIのサーバーURLは相対パスで、稼働中のAPIを意味しません。
+Web側は [OpenAPI 3.1](../contracts/openapi.json)、[生成済みTypeScript型](../contracts/generated/api.ts)、[4つの通し操作例](../contracts/scenarios/)、[SSEイベントスキーマ](../contracts/events.schema.json)、[レポートスキーマ](../contracts/report.schema.json)から画面・モック接続を開始できます。OpenAPIのサーバーURLは相対パスで、稼働中のAPIを意味しません。v0.2は23操作、未回答のままの終了、一覧取得、質問計画の配信、ログアウトを定義しています。
 
 [プロンプト](../prompts/)と[OpenAIリクエスト例](../contracts/provider-examples.json)はバックエンド向けです。APIキー・実在候補者情報は含みません。プロバイダー例はテンプレートであり、そのまま送信しないでください。
 
-設計の検証範囲は [検証記録](07-validation.md)に記載しています。実マイク・有料API・本番環境での動作確認は別途必要です。
+設計の検証範囲は [検証記録](07-validation.md)に記載しています。36件の契約・状態・費用計算テストとTypeScriptの型検査を実行しました。検証モデルは通信しない架空データ専用で、実マイク・有料API・本番環境での動作確認は別途必要です。

@@ -1,6 +1,6 @@
 # 構成とデータの正本
 
-ステータス：新提案 v0.1。対象は職務に関係する情報の収集と構造化。モデルが採用可否を決める処理は置かない。
+ステータス：新提案 v0.2。対象は職務に関係する情報の収集と構造化。モデルが採用可否を決める処理は置かない。
 
 ```mermaid
 flowchart TD
@@ -35,7 +35,7 @@ NodeとWorkersを分ける構成は既存Web案に合わせる。配置地域、
 3. 候補者にサーバー生成の同意文書を提示し、同意保存後に初めてマイクを要求する。AI利用・文字記録・目的・保存・処理先・中止方法を説明する。
 4. WebRTCのofferを業務APIへ送る。NodeがサーバーキーでLiveを作り、sideband購読を確立してからSDP answerを返す。マイクtrackは無効状態で用意し、`voice.ready`まで送信しない。
 5. Nodeは入力・出力の文字断片を受信時に永続化する。ブラウザー字幕はSSEの正本を使用し、DataChannelから同じ文字を二重登録しない。
-6. 意味のまとまりごとにアプリが仮の発話を作る。Decisionsは「続行/訂正/一時停止/終了希望/人に相談/不明」だけを分類する。分類失敗は確認質問に落とす。停止ボタンは分類を経由せず即時に作用する。
+6. 意味のまとまりごとにアプリが仮の発話を作る。Decisionsは「続行/訂正/一時停止/終了希望/同意撤回希望/人に相談/不明」だけを分類する。分類失敗は確認質問に落とす。同意撤回希望を検知したら音声を一旦停止して画面で確認し、そのまま面談を続けない。停止ボタンは分類を経由せず即時に作用する。
 7. Agentsは質問計画・確認済み発話・未回答項目から次の質問を提案する。アプリが許可済み質問、順番、発話バージョン、長さを検証してLiveへ伝える。Liveは一問ずつ話す。
 8. 終了希望では録音送信を停止し、backendの新規タスクを止め、`session.close`から`session.closed`までイベントを取り込む。その後に候補者へ最新の文字記録と未確認箇所を提示する。
 9. 候補者が文字記録のバージョンを確認して`finish`する。トランザクションでsnapshotとoutboxを保存し、非同期でレポート下書きを作る。
@@ -51,8 +51,9 @@ stateDiagram-v2
   connecting --> active: sidebandと音声準備完了
   connecting --> paused: 接続失敗
   active --> paused: 中断または回線断
-  paused --> connecting: 新しい接続で再開
+  paused --> ready: 接続を閉じて再開準備
   ready --> active: テキスト回答
+  ready --> awaiting_confirmation: 無回答で終了希望
   active --> awaiting_confirmation: 終了希望と音声クローズ
   paused --> awaiting_confirmation: 終了希望
   awaiting_confirmation --> finalizing: 最新記録を確認
@@ -65,6 +66,8 @@ stateDiagram-v2
 ```
 
 同意撤回・明示的取消はどの未削除状態からも`cancelled`にする。`failed`からの再生成は同じ確認済みsnapshotに対する運用操作であり、面談や招待を増やさない。再開は接続IDを変え、面談IDを維持する。テキスト回答は音声接続なしでも`active`に進める。
+
+`awaiting_confirmation`は終了要求の受領から使う。音声接続をclose/drainしている間は最終確認を無効にし、active_connection_idがnullになるまでfinishを許可しない。過去のgapは接続を跨いで保持し、人の欠落確認を最新のtranscript_versionに紐付ける。状態名だけで終了可能と判定しない。
 
 - `revision`：状態、同意、訂正、確定などの業務更新の楽観ロック。字幕断片ごとには増やさない。
 - `transcript_version`：正規化した発話の追加・訂正・後着の反映で増える。候補者の最終確認はこの値に結びつく。

@@ -1,0 +1,624 @@
+{
+  "scenario": "empty-interview",
+  "contract_version": "0.2.0",
+  "notice": "Synthetic offline contract trace. No microphone, AI, login, storage service or real credentials.",
+  "initial_snapshot": {
+    "interview_id": "iv_demo",
+    "template_version_id": "tpl_demo_v1",
+    "state": "awaiting_consent",
+    "revision": 1,
+    "transcript_version": 0,
+    "generation": 1,
+    "last_seq": 0,
+    "consent_active": false,
+    "consent_document": {
+      "policy_id": "policy_demo",
+      "policy_version": "draft-0.1",
+      "policy_hash": "d7cb9fb04e9d94a1748dd0266721831ae07f574cf60c355f3c96524635becc73",
+      "locale": "ja-JP",
+      "statements": [
+        "架空の同意文面です。本番では目的・委託先・保持・国外処理・問い合わせ方法を確定してください。"
+      ],
+      "retention_days": 30,
+      "audio_recording": false
+    },
+    "active_connection_id": null,
+    "finalization_confirmed": false,
+    "finalization_review_id": null,
+    "finalization_review_transcript_version": null,
+    "human_requested": false,
+    "utterances": [],
+    "report_status": "none",
+    "template": {
+      "template_version_id": "tpl_demo_v1",
+      "version": 1,
+      "created_at": "2026-10-22T03:00:00Z",
+      "content": {
+        "title": "架空の開発職向け面談",
+        "job_description": "架空のWeb開発職。実在企業・候補者を含まない。",
+        "questions": [
+          {
+            "question_id": "q_experience",
+            "text": "担当した期間を教えてください。",
+            "required": true
+          },
+          {
+            "question_id": "q_role",
+            "text": "担当した業務と役割を教えてください。",
+            "required": true
+          }
+        ]
+      }
+    },
+    "current_question_id": "q_experience",
+    "gaps": []
+  },
+  "steps": [
+    {
+      "kind": "api",
+      "operation": "createConsent",
+      "actor_role": "candidate",
+      "request": {
+        "expected_revision": 1,
+        "policy_id": "policy_demo",
+        "policy_version": "draft-0.1",
+        "policy_hash": "d7cb9fb04e9d94a1748dd0266721831ae07f574cf60c355f3c96524635becc73",
+        "ai_dialogue_accepted": true,
+        "transcript_processing_accepted": true
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "interview_id": "iv_demo",
+          "template_version_id": "tpl_demo_v1",
+          "state": "ready",
+          "revision": 2,
+          "transcript_version": 0,
+          "generation": 1,
+          "last_seq": 1,
+          "consent_active": true,
+          "consent_document": {
+            "policy_id": "policy_demo",
+            "policy_version": "draft-0.1",
+            "policy_hash": "d7cb9fb04e9d94a1748dd0266721831ae07f574cf60c355f3c96524635becc73",
+            "locale": "ja-JP",
+            "statements": [
+              "架空の同意文面です。本番では目的・委託先・保持・国外処理・問い合わせ方法を確定してください。"
+            ],
+            "retention_days": 30,
+            "audio_recording": false
+          },
+          "active_connection_id": null,
+          "finalization_confirmed": false,
+          "finalization_review_id": null,
+          "finalization_review_transcript_version": null,
+          "human_requested": false,
+          "utterances": [],
+          "report_status": "none",
+          "template": {
+            "template_version_id": "tpl_demo_v1",
+            "version": 1,
+            "created_at": "2026-10-22T03:00:00Z",
+            "content": {
+              "title": "架空の開発職向け面談",
+              "job_description": "架空のWeb開発職。実在企業・候補者を含まない。",
+              "questions": [
+                {
+                  "question_id": "q_experience",
+                  "text": "担当した期間を教えてください。",
+                  "required": true
+                },
+                {
+                  "question_id": "q_role",
+                  "text": "担当した業務と役割を教えてください。",
+                  "required": true
+                }
+              ]
+            }
+          },
+          "current_question_id": "q_experience",
+          "gaps": []
+        }
+      },
+      "snapshot": {
+        "interview_id": "iv_demo",
+        "template_version_id": "tpl_demo_v1",
+        "state": "ready",
+        "revision": 2,
+        "transcript_version": 0,
+        "generation": 1,
+        "last_seq": 1,
+        "consent_active": true,
+        "consent_document": {
+          "policy_id": "policy_demo",
+          "policy_version": "draft-0.1",
+          "policy_hash": "d7cb9fb04e9d94a1748dd0266721831ae07f574cf60c355f3c96524635becc73",
+          "locale": "ja-JP",
+          "statements": [
+            "架空の同意文面です。本番では目的・委託先・保持・国外処理・問い合わせ方法を確定してください。"
+          ],
+          "retention_days": 30,
+          "audio_recording": false
+        },
+        "active_connection_id": null,
+        "finalization_confirmed": false,
+        "finalization_review_id": null,
+        "finalization_review_transcript_version": null,
+        "human_requested": false,
+        "utterances": [],
+        "report_status": "none",
+        "template": {
+          "template_version_id": "tpl_demo_v1",
+          "version": 1,
+          "created_at": "2026-10-22T03:00:00Z",
+          "content": {
+            "title": "架空の開発職向け面談",
+            "job_description": "架空のWeb開発職。実在企業・候補者を含まない。",
+            "questions": [
+              {
+                "question_id": "q_experience",
+                "text": "担当した期間を教えてください。",
+                "required": true
+              },
+              {
+                "question_id": "q_role",
+                "text": "担当した業務と役割を教えてください。",
+                "required": true
+              }
+            ]
+          }
+        },
+        "current_question_id": "q_experience",
+        "gaps": []
+      }
+    },
+    {
+      "kind": "api",
+      "operation": "submitCommand",
+      "actor_role": "candidate",
+      "request": {
+        "expected_revision": 2,
+        "command": "request_finish"
+      },
+      "response": {
+        "status": 202,
+        "body": {
+          "interview_id": "iv_demo",
+          "template_version_id": "tpl_demo_v1",
+          "state": "awaiting_confirmation",
+          "revision": 3,
+          "transcript_version": 0,
+          "generation": 1,
+          "last_seq": 2,
+          "consent_active": true,
+          "consent_document": {
+            "policy_id": "policy_demo",
+            "policy_version": "draft-0.1",
+            "policy_hash": "d7cb9fb04e9d94a1748dd0266721831ae07f574cf60c355f3c96524635becc73",
+            "locale": "ja-JP",
+            "statements": [
+              "架空の同意文面です。本番では目的・委託先・保持・国外処理・問い合わせ方法を確定してください。"
+            ],
+            "retention_days": 30,
+            "audio_recording": false
+          },
+          "active_connection_id": null,
+          "finalization_confirmed": false,
+          "finalization_review_id": null,
+          "finalization_review_transcript_version": null,
+          "human_requested": false,
+          "utterances": [],
+          "report_status": "none",
+          "template": {
+            "template_version_id": "tpl_demo_v1",
+            "version": 1,
+            "created_at": "2026-10-22T03:00:00Z",
+            "content": {
+              "title": "架空の開発職向け面談",
+              "job_description": "架空のWeb開発職。実在企業・候補者を含まない。",
+              "questions": [
+                {
+                  "question_id": "q_experience",
+                  "text": "担当した期間を教えてください。",
+                  "required": true
+                },
+                {
+                  "question_id": "q_role",
+                  "text": "担当した業務と役割を教えてください。",
+                  "required": true
+                }
+              ]
+            }
+          },
+          "current_question_id": "q_experience",
+          "gaps": []
+        }
+      },
+      "snapshot": {
+        "interview_id": "iv_demo",
+        "template_version_id": "tpl_demo_v1",
+        "state": "awaiting_confirmation",
+        "revision": 3,
+        "transcript_version": 0,
+        "generation": 1,
+        "last_seq": 2,
+        "consent_active": true,
+        "consent_document": {
+          "policy_id": "policy_demo",
+          "policy_version": "draft-0.1",
+          "policy_hash": "d7cb9fb04e9d94a1748dd0266721831ae07f574cf60c355f3c96524635becc73",
+          "locale": "ja-JP",
+          "statements": [
+            "架空の同意文面です。本番では目的・委託先・保持・国外処理・問い合わせ方法を確定してください。"
+          ],
+          "retention_days": 30,
+          "audio_recording": false
+        },
+        "active_connection_id": null,
+        "finalization_confirmed": false,
+        "finalization_review_id": null,
+        "finalization_review_transcript_version": null,
+        "human_requested": false,
+        "utterances": [],
+        "report_status": "none",
+        "template": {
+          "template_version_id": "tpl_demo_v1",
+          "version": 1,
+          "created_at": "2026-10-22T03:00:00Z",
+          "content": {
+            "title": "架空の開発職向け面談",
+            "job_description": "架空のWeb開発職。実在企業・候補者を含まない。",
+            "questions": [
+              {
+                "question_id": "q_experience",
+                "text": "担当した期間を教えてください。",
+                "required": true
+              },
+              {
+                "question_id": "q_role",
+                "text": "担当した業務と役割を教えてください。",
+                "required": true
+              }
+            ]
+          }
+        },
+        "current_question_id": "q_experience",
+        "gaps": []
+      }
+    },
+    {
+      "kind": "api",
+      "operation": "finishInterview",
+      "actor_role": "candidate",
+      "request": {
+        "expected_revision": 3,
+        "confirmed_transcript_version": 0,
+        "confirmed": true
+      },
+      "response": {
+        "status": 202,
+        "body": {
+          "operation_id": "job_1",
+          "status": "queued",
+          "transcript_version": 0,
+          "poll_after_ms": 1000
+        }
+      },
+      "snapshot": {
+        "interview_id": "iv_demo",
+        "template_version_id": "tpl_demo_v1",
+        "state": "finalizing",
+        "revision": 4,
+        "transcript_version": 0,
+        "generation": 1,
+        "last_seq": 4,
+        "consent_active": true,
+        "consent_document": {
+          "policy_id": "policy_demo",
+          "policy_version": "draft-0.1",
+          "policy_hash": "d7cb9fb04e9d94a1748dd0266721831ae07f574cf60c355f3c96524635becc73",
+          "locale": "ja-JP",
+          "statements": [
+            "架空の同意文面です。本番では目的・委託先・保持・国外処理・問い合わせ方法を確定してください。"
+          ],
+          "retention_days": 30,
+          "audio_recording": false
+        },
+        "active_connection_id": null,
+        "finalization_confirmed": false,
+        "finalization_review_id": null,
+        "finalization_review_transcript_version": null,
+        "human_requested": false,
+        "utterances": [],
+        "report_status": "generating",
+        "template": {
+          "template_version_id": "tpl_demo_v1",
+          "version": 1,
+          "created_at": "2026-10-22T03:00:00Z",
+          "content": {
+            "title": "架空の開発職向け面談",
+            "job_description": "架空のWeb開発職。実在企業・候補者を含まない。",
+            "questions": [
+              {
+                "question_id": "q_experience",
+                "text": "担当した期間を教えてください。",
+                "required": true
+              },
+              {
+                "question_id": "q_role",
+                "text": "担当した業務と役割を教えてください。",
+                "required": true
+              }
+            ]
+          }
+        },
+        "current_question_id": "q_experience",
+        "gaps": []
+      }
+    },
+    {
+      "kind": "server_fixture",
+      "action": "complete_job",
+      "result": true,
+      "snapshot": {
+        "interview_id": "iv_demo",
+        "template_version_id": "tpl_demo_v1",
+        "state": "review_pending",
+        "revision": 5,
+        "transcript_version": 0,
+        "generation": 1,
+        "last_seq": 6,
+        "consent_active": true,
+        "consent_document": {
+          "policy_id": "policy_demo",
+          "policy_version": "draft-0.1",
+          "policy_hash": "d7cb9fb04e9d94a1748dd0266721831ae07f574cf60c355f3c96524635becc73",
+          "locale": "ja-JP",
+          "statements": [
+            "架空の同意文面です。本番では目的・委託先・保持・国外処理・問い合わせ方法を確定してください。"
+          ],
+          "retention_days": 30,
+          "audio_recording": false
+        },
+        "active_connection_id": null,
+        "finalization_confirmed": false,
+        "finalization_review_id": null,
+        "finalization_review_transcript_version": null,
+        "human_requested": false,
+        "utterances": [],
+        "report_status": "draft",
+        "template": {
+          "template_version_id": "tpl_demo_v1",
+          "version": 1,
+          "created_at": "2026-10-22T03:00:00Z",
+          "content": {
+            "title": "架空の開発職向け面談",
+            "job_description": "架空のWeb開発職。実在企業・候補者を含まない。",
+            "questions": [
+              {
+                "question_id": "q_experience",
+                "text": "担当した期間を教えてください。",
+                "required": true
+              },
+              {
+                "question_id": "q_role",
+                "text": "担当した業務と役割を教えてください。",
+                "required": true
+              }
+            ]
+          }
+        },
+        "current_question_id": "q_experience",
+        "gaps": []
+      }
+    },
+    {
+      "kind": "api",
+      "operation": "getReport",
+      "actor_role": "candidate",
+      "request": null,
+      "response": {
+        "status": 200,
+        "body": {
+          "schema_version": "1.0",
+          "interview_id": "iv_demo",
+          "report_version": 1,
+          "transcript_version": 0,
+          "generated_at": "2026-10-22T12:00:00Z",
+          "model": "offline-fixture",
+          "prompt_version": "no-model",
+          "review_status": "draft",
+          "content": {
+            "questions": [
+              {
+                "question_id": "q_experience",
+                "status": "unconfirmed",
+                "summary": "",
+                "evidence": []
+              },
+              {
+                "question_id": "q_role",
+                "status": "unconfirmed",
+                "summary": "",
+                "evidence": []
+              }
+            ],
+            "follow_up": [],
+            "candidate_questions": [],
+            "limitations": []
+          }
+        }
+      },
+      "snapshot": {
+        "interview_id": "iv_demo",
+        "template_version_id": "tpl_demo_v1",
+        "state": "review_pending",
+        "revision": 5,
+        "transcript_version": 0,
+        "generation": 1,
+        "last_seq": 6,
+        "consent_active": true,
+        "consent_document": {
+          "policy_id": "policy_demo",
+          "policy_version": "draft-0.1",
+          "policy_hash": "d7cb9fb04e9d94a1748dd0266721831ae07f574cf60c355f3c96524635becc73",
+          "locale": "ja-JP",
+          "statements": [
+            "架空の同意文面です。本番では目的・委託先・保持・国外処理・問い合わせ方法を確定してください。"
+          ],
+          "retention_days": 30,
+          "audio_recording": false
+        },
+        "active_connection_id": null,
+        "finalization_confirmed": false,
+        "finalization_review_id": null,
+        "finalization_review_transcript_version": null,
+        "human_requested": false,
+        "utterances": [],
+        "report_status": "draft",
+        "template": {
+          "template_version_id": "tpl_demo_v1",
+          "version": 1,
+          "created_at": "2026-10-22T03:00:00Z",
+          "content": {
+            "title": "架空の開発職向け面談",
+            "job_description": "架空のWeb開発職。実在企業・候補者を含まない。",
+            "questions": [
+              {
+                "question_id": "q_experience",
+                "text": "担当した期間を教えてください。",
+                "required": true
+              },
+              {
+                "question_id": "q_role",
+                "text": "担当した業務と役割を教えてください。",
+                "required": true
+              }
+            ]
+          }
+        },
+        "current_question_id": "q_experience",
+        "gaps": []
+      }
+    }
+  ],
+  "events": [
+    {
+      "schema_version": "1.0",
+      "seq": 1,
+      "interview_id": "iv_demo",
+      "occurred_at": "2026-10-22T12:00:00Z",
+      "revision": 2,
+      "transcript_version": 0,
+      "generation": 1,
+      "type": "interview.updated",
+      "data": {
+        "state": "ready",
+        "reason": "consented",
+        "finalization_confirmed": false
+      }
+    },
+    {
+      "schema_version": "1.0",
+      "seq": 2,
+      "interview_id": "iv_demo",
+      "occurred_at": "2026-10-22T12:00:00Z",
+      "revision": 3,
+      "transcript_version": 0,
+      "generation": 1,
+      "type": "interview.updated",
+      "data": {
+        "state": "awaiting_confirmation",
+        "reason": "finish_requested",
+        "finalization_confirmed": false
+      }
+    },
+    {
+      "schema_version": "1.0",
+      "seq": 3,
+      "interview_id": "iv_demo",
+      "occurred_at": "2026-10-22T12:00:00Z",
+      "revision": 4,
+      "transcript_version": 0,
+      "generation": 1,
+      "type": "interview.updated",
+      "data": {
+        "state": "finalizing",
+        "reason": "report_requested",
+        "finalization_confirmed": false
+      }
+    },
+    {
+      "schema_version": "1.0",
+      "seq": 4,
+      "interview_id": "iv_demo",
+      "occurred_at": "2026-10-22T12:00:00Z",
+      "revision": 4,
+      "transcript_version": 0,
+      "generation": 1,
+      "type": "report.updated",
+      "data": {
+        "status": "generating",
+        "report_version": null
+      }
+    },
+    {
+      "schema_version": "1.0",
+      "seq": 5,
+      "interview_id": "iv_demo",
+      "occurred_at": "2026-10-22T12:00:00Z",
+      "revision": 5,
+      "transcript_version": 0,
+      "generation": 1,
+      "type": "interview.updated",
+      "data": {
+        "state": "review_pending",
+        "reason": "report_stored",
+        "finalization_confirmed": false
+      }
+    },
+    {
+      "schema_version": "1.0",
+      "seq": 6,
+      "interview_id": "iv_demo",
+      "occurred_at": "2026-10-22T12:00:00Z",
+      "revision": 5,
+      "transcript_version": 0,
+      "generation": 1,
+      "type": "report.updated",
+      "data": {
+        "status": "draft",
+        "report_version": 1
+      }
+    }
+  ],
+  "final_report": {
+    "schema_version": "1.0",
+    "interview_id": "iv_demo",
+    "report_version": 1,
+    "transcript_version": 0,
+    "generated_at": "2026-10-22T12:00:00Z",
+    "model": "offline-fixture",
+    "prompt_version": "no-model",
+    "review_status": "draft",
+    "content": {
+      "questions": [
+        {
+          "question_id": "q_experience",
+          "status": "unconfirmed",
+          "summary": "",
+          "evidence": []
+        },
+        {
+          "question_id": "q_role",
+          "status": "unconfirmed",
+          "summary": "",
+          "evidence": []
+        }
+      ],
+      "follow_up": [],
+      "candidate_questions": [],
+      "limitations": []
+    }
+  }
+}

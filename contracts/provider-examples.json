@@ -92,6 +92,9 @@
               "value": "finish"
             },
             {
+              "value": "withdraw"
+            },
+            {
               "value": "human"
             },
             {

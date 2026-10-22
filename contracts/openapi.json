@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "HaaS Recruitment Dialogue API — proposal",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "2026-10-22 review proposal; no deployed server. Human-reviewed records, no automated hiring. See docs/03-web-api-integration.md."
   },
   "servers": [
@@ -22,7 +22,7 @@
         "summary": "不変の質問テンプレート版を作る",
         "description": "不変の質問テンプレート版を作る",
         "x-roles": [
-          "assigned_recruiter",
+          "recruiter",
           "tenant_admin"
         ],
         "parameters": [
@@ -129,6 +129,125 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/TemplateCreate"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listTemplateVersions",
+        "summary": "権限内の一覧をcursorで取得",
+        "description": "Authorization-filtered before pagination. Stable opaque cursor binds filter and actor scope. Admin content access requires assignment. No unscoped total count.",
+        "x-roles": [
+          "recruiter",
+          "tenant_admin"
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "権限内の一覧をcursorで取得",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Operation not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not available in this scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version/state/idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retry delay in seconds"
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -357,13 +476,250 @@
         }
       }
     },
+    "/auth/logout": {
+      "post": {
+        "operationId": "logoutSession",
+        "summary": "アプリセッション失効とCookie削除",
+        "description": "Revoke server session and close its SSE subscriptions before clearing cookie. Pause/close voice connections owned by this candidate session. No interview deletion implied. Replays must not restore an expired/revoked session.",
+        "x-roles": [
+          "candidate_self",
+          "recruiter",
+          "tenant_admin"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/CsrfToken"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "アプリセッション失効とCookie削除",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutReceipt"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "haas_session=; Max-Age=0; HttpOnly; Secure; SameSite=Lax; Path=/"
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Operation not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not available in this scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version/state/idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retry delay in seconds"
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/interviews": {
+      "get": {
+        "operationId": "listInterviews",
+        "summary": "権限内の一覧をcursorで取得",
+        "description": "Authorization-filtered before pagination. Stable opaque cursor binds filter and actor scope. Admin content access requires assignment. No unscoped total count.",
+        "x-roles": [
+          "recruiter",
+          "tenant_admin"
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "権限内の一覧をcursorで取得",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Operation not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not available in this scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version/state/idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retry delay in seconds"
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "operationId": "createInterview",
         "summary": "面談と一回交換の招待を作る",
-        "description": "candidate_reference is an internal opaque reference, not an email address. Does not send an invitation externally.",
+        "description": "candidate_reference is an internal opaque reference, not an email address. Creates the creator assignment atomically. Does not send an invitation externally.",
         "x-roles": [
-          "assigned_recruiter"
+          "recruiter"
         ],
         "parameters": [
           {
@@ -469,6 +825,120 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/InterviewCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/template-versions/{template_version_id}": {
+      "get": {
+        "operationId": "getTemplateVersion",
+        "summary": "権限内の不変質問テンプレート",
+        "description": "権限内の不変質問テンプレート",
+        "x-roles": [
+          "recruiter",
+          "tenant_admin"
+        ],
+        "parameters": [
+          {
+            "name": "template_version_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "権限内の不変質問テンプレート",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateVersion"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Operation not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not available in this scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version/state/idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Retry delay in seconds"
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -1260,7 +1730,7 @@
       "post": {
         "operationId": "submitCommand",
         "summary": "一時停止・再開・終了希望・取消・人への相談",
-        "description": "pause stops local mic immediately. resume changes paused to ready; create new voice connection or send text next. request_finish drains/closes voice before awaiting_confirmation. cancel ends processing. request_human records a flag, no external message.",
+        "description": "pause/cancel/request_human do not fail solely for stale expected_revision; authorization and CSRF still apply. pause stops local mic immediately. resume changes paused to ready after voice close. request_finish starts close/drain; finish is blocked until it completes. request_human records a flag, no external message.",
         "x-roles": [
           "candidate_self"
         ],
@@ -2930,6 +3400,55 @@
               "reviewed",
               "failed"
             ]
+          },
+          "template": {
+            "$ref": "#/components/schemas/TemplateVersion"
+          },
+          "current_question_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "finalization_review_transcript_version": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gaps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "connection_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9_-]+$"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "connection_id",
+                "reason"
+              ],
+              "additionalProperties": false
+            }
           }
         },
         "required": [
@@ -2947,7 +3466,11 @@
           "finalization_review_id",
           "human_requested",
           "utterances",
-          "report_status"
+          "report_status",
+          "template",
+          "current_question_id",
+          "finalization_review_transcript_version",
+          "gaps"
         ],
         "additionalProperties": false
       },
@@ -3101,7 +3624,7 @@
           },
           "confirmed_transcript_version": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 0
           },
           "confirmed": {
             "type": "boolean",
@@ -3124,7 +3647,7 @@
           },
           "transcript_version": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 0
           },
           "gap_note": {
             "type": "string",
@@ -3168,7 +3691,7 @@
           },
           "transcript_version": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 0
           },
           "poll_after_ms": {
             "type": "integer",
@@ -3265,10 +3788,6 @@
       "WithdrawalCreate": {
         "type": "object",
         "properties": {
-          "expected_revision": {
-            "type": "integer",
-            "minimum": 1
-          },
           "request_deletion": {
             "type": "boolean"
           },
@@ -3278,7 +3797,6 @@
           }
         },
         "required": [
-          "expected_revision",
           "request_deletion",
           "confirmed"
         ],
@@ -3454,6 +3972,116 @@
         },
         "required": [
           "error"
+        ],
+        "additionalProperties": false
+      },
+      "InterviewList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "interview_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9_-]+$"
+                },
+                "template_version_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9_-]+$"
+                },
+                "candidate_reference": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "awaiting_consent",
+                    "ready",
+                    "connecting",
+                    "active",
+                    "paused",
+                    "awaiting_confirmation",
+                    "finalizing",
+                    "review_pending",
+                    "reviewed",
+                    "cancelled",
+                    "failed"
+                  ]
+                },
+                "revision": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "required": [
+                "interview_id",
+                "template_version_id",
+                "candidate_reference",
+                "state",
+                "revision"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "additionalProperties": false
+      },
+      "TemplateList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TemplateVersion"
+            }
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "additionalProperties": false
+      },
+      "LogoutReceipt": {
+        "type": "object",
+        "properties": {
+          "revoked": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "revoked"
         ],
         "additionalProperties": false
       }

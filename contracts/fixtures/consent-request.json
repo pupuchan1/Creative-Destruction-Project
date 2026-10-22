@@ -2,7 +2,7 @@
   "expected_revision": 1,
   "policy_id": "policy_demo",
   "policy_version": "draft-0.1",
-  "policy_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "policy_hash": "d7cb9fb04e9d94a1748dd0266721831ae07f574cf60c355f3c96524635becc73",
   "ai_dialogue_accepted": true,
   "transcript_processing_accepted": true
 }

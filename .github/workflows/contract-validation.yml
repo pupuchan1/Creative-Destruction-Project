@@ -1,0 +1,54 @@
+name: Recruitment contract validation
+
+on:
+  pull_request:
+    paths:
+      - 'contracts/**'
+      - 'contract_lab/**'
+      - 'scripts/**'
+      - 'docs/**'
+      - 'requirements-contracts.txt'
+      - '.github/workflows/contract-validation.yml'
+  push:
+    branches: [main, docs/recruitment-api-design-20261022]
+    paths:
+      - 'contracts/**'
+      - 'contract_lab/**'
+      - 'scripts/**'
+      - 'docs/**'
+      - 'requirements-contracts.txt'
+      - '.github/workflows/contract-validation.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: recruitment-contracts-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install contract validation dependencies
+        run: python -m pip install -r requirements-contracts.txt
+      - name: Check generated contracts for drift
+        run: |
+          python scripts/build_contracts.py
+          python scripts/generate_contract_types.py --check
+          python -m contract_lab.export_scenarios --check
+          git diff --exit-code -- contracts
+      - name: Validate schemas, Web scenarios and state invariants
+        run: |
+          python scripts/validate_contracts.py
+          python -m unittest discover -s contract_lab -p 'test_*.py' -v
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.1'
+      - name: Type-check the generated Web interface
+        run: npx --yes --package typescript@7.0.2 tsc --noEmit --strict --target ES2022 --module ESNext --moduleResolution bundler contracts/types-smoke.ts

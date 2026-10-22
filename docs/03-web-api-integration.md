@@ -1,13 +1,13 @@
 # Web担当者向け接続契約
 
-新提案 v0.1。正確なフィールドとレスポンスは[OpenAPI](../contracts/openapi.json)を正とし、SSEは[イベントスキーマ](../contracts/events.schema.json)に従う。以下のパスはすべてアプリ独自APIであり、OpenAIのAPIパスではない。
+新提案 v0.2。正確なフィールドとレスポンスは[OpenAPI](../contracts/openapi.json)を正とし、SSEは[イベントスキーマ](../contracts/events.schema.json)に従う。以下のパスはすべてアプリ独自APIであり、OpenAIのAPIパスではない。
 
 ## 共通ルール
 
 - 同一originの`/api/v1`。HttpOnly/Secure/SameSite=Laxの`haas_session` Cookie。更新系はOrigin検証と`X-CSRF-Token`を必須とする。招待交換と担当者の初回認証交換は事前Cookie・CSRF不要だが、Origin・レート制限を検証する。招待URLのtokenはfragmentで受け取り、交換後にURLから除去する。
 - 企業側認証はSupabase Auth等の検証済みセッションをBFFのCookieへ交換する想定。ログイン方式の最終決定はWeb担当。OpenAIの認証とは別物。IDからテナントを推測・自己指定させない。
 - すべてのPOSTは`Idempotency-Key`を必須とする。principal＋HTTP method＋route＋keyで24時間保持（初期提案）。同一payloadなら同一結果、異なるpayloadなら409。秘密の招待token・SDPはログに残さず、再送に必要な応答は暗号化・短期保持する。
-- 面談の更新は`expected_revision`で競合検出。409には現在revisionを返す。再取得して人の操作意図を確認し、機械的な上書きをしない。403と404は企業を跨ぐ存在の漏洩を避けるため当該リソースでは404へ統一する。
+- 面談の更新は原則`expected_revision`で競合検出。例外は同意撤回（revisionを要求しない）、pause/cancel/request_human（古いrevisionだけを理由に拒否しない）。停止を字幕更新との競合で妨げない。認証・認可・CSRFは例外なく検証する。409には権限内の現在revisionを返し、機械的な上書きをしない。企業・候補者を跨ぐ存在確認には404を返し、revisionも漏らさない。
 - 429は`Retry-After`、503は再試行可能性を返す。指数backoff＋jitterは上限3回を提案。候補者入力を消さない。401は再認証、422は入力修正。エラーに本文・音声・キーを含めない。
 - 日時はUTC RFC3339、表示は利用者のlocale。IDは不透明文字列。本文上限・レート上限はサーバーで検証する。
 
@@ -17,8 +17,11 @@
 |---|---|---|
 | 担当者認証の交換 | POST /auth/exchange | 検証済みidentity-provider JWTと有効なmembershipからCookie発行。初回CSRF不要、Origin検証必須 |
 | セッション再取得 | GET /session | Cookie主体とCSRF tokenを返す。no-store、cross-originでの取得を許可しない |
+| ログアウト | POST /auth/logout | セッションを失効しCookieとSSEを閉じる。候補者セッションが所有する音声もpause/close |
+| 求人・質問の一覧/取得 | GET /template-versions、GET /template-versions/{template_version_id} | 企業内のテンプレートを取得。cursor/limitでページング |
+| 面談一覧 | GET /interviews | 許可された範囲に絞ってからページング。未割当の本文は返さない |
 | テンプレート版作成 | POST /template-versions | 担当者／管理者。職務説明と質問を不変版として保存 |
-| 面談・招待作成 | POST /interviews | 担当者。招待tokenは一度だけ返す。送信自体は別の明示操作 |
+| 面談・招待作成 | POST /interviews | 担当者。作成者への担当割当も同じトランザクションで保存。招待tokenは一度だけ返す。送信自体は別の明示操作 |
 | 招待交換 | POST /invites/exchange | token保持者。期限・一回使用を検証し面談限定Cookie発行 |
 | スナップショット | GET /interviews/{interview_id} | 本人／割当担当者。最新版、同意文書、字幕、状態を返す |
 | 同意記録 | POST /interviews/{interview_id}/consents | 本人。表示済みのpolicy_version/hashと必須項目を検証 |
@@ -65,11 +68,17 @@ SSEの`id`とJSONの`seq`は一致する。クライアントは最後に適用�
 
 `request_finish`で入力を止め、Liveを閉じ、状態を`awaiting_confirmation`にする。音声のない文字面談ではcloseは不要。音声のfinalizationが未確認なら`finish`は409 `FINALIZATION_UNCONFIRMED`。担当者が欠落を調べ、候補者の文字での補完などを確認して`finalization-reviews`へnoteと最新transcript_versionを送る。これにより`finalization_review_id`が設定され、当該バージョンに限って本人のfinishを許可する。providerの`finalization_confirmed`をtrueへ偽装せず、レポートには欠落と人の確認を明記する。文字記録が変わればこのreviewも失効する。単にUIタイマーが切れたことを完了にしない。
 
-`finish`は`confirmed_transcript_version`が最新、同意が有効、接続が閉じ、終了確認または上記の人による欠落確認が有効な場合のみ202。文字面談のみならprovider終了確認は不要。未回答項目は残してよく、未回答を作り話で埋めない。質問への回答を強制するために終了を拒否しない。cancelはこれらの確認待ちでも常に選べる。
+`finish`は`confirmed_transcript_version`が最新、同意が有効、接続が閉じ、終了確認または上記の人による欠落確認が有効な場合のみ202。発話ゼロの場合はバージョン0を確認でき、全項目unconfirmedで下書きを作る。文字面談のみならprovider終了確認は不要。再接続の最後が正常に閉じても、古い接続の未確認gapは消えない。`gaps`がある場合は`finalization_review_transcript_version`が最新と一致する人の確認が必要。未回答項目を作り話で埋めず、質問への回答を強制するために終了を拒否しない。cancelは確認待ちでも常に選べる。
 
 訂正は相手側の発話や別候補者の発話には適用できない。引用の誤りを指摘する場合は問い合わせとして扱う。下書き生成中・確認後の訂正も受理し、旧レポートと旧reviewをstaleにする。最新記録を再確認して再生成する。クライアントが古いreport_versionをreviewしようとしたら409。
 
 reviewの`acknowledge`は「記録の根拠を人が確認した」であり「採用」ではない。`request_changes`は担当者メモを残し、候補者の原発話を担当者が書き換える操作ではない。必須チェック`evidence_checked`と`corrections_checked`は明示操作でtrueにする。
+
+snapshotは`template`（職務と不変の質問版）、`current_question_id`、`gaps`を含む。画面が質問を推測して作らない。未取得の質問をブラウザーのAIやハードコードで補わない。
+
+冪等応答を返す前にも現在の認証・割当・失効・取消を検証する。撤回前の成功応答を再送して処理が生きているように見せない。招待交換前はprincipalがないためtokenのhashとOriginにscopeを固定し、交換後の再送は同じ発行セッションに紐付ける。ログアウト後の再送でCookieを復活させない。応答を失った場合の再招待は新tokenで行う。
+
+同意hashは`policy_hash`自身を除くConsentDocumentのUTF-8 JSON（キー昇順・空白なし・Unicodeをそのまま出力）のSHA-256とする。クライアントは再計算せず、表示したサーバー版のhashを返す。文書変更はversion/hashを更新し、古い同意を使い回さない。
 
 ## バックエンド内部契約
 
@@ -81,7 +90,7 @@ AI担当からWeb担当への納品単位：この契約、provider adapterの�
 
 ## 画面プロトタイプへの接続対応
 
-2026-10-22の再確認で、`feat/haas-screen-prototype`のcommit `459fbfe2983ad3511f067086adbe9b285cbe991a`を確認した。画面遷移と未接続表示を再利用し、次の順で接続する。今回は同ブランチのコードは変更していない。
+2026-10-22の追加確認で、`feat/haas-screen-prototype`のcommit `6f685ada68a71ec7993dbd1b53fd6b5d467235d5`を確認した。白・青のデザインと画面遷移が追加され、API・業務型の接続境界は前回確認時から同じ。画面遷移と未接続表示を再利用し、次の順で接続する。今回は同ブランチのコードは変更していない。
 
 | 現在の画面・実装先 | 接続するもの | 変更が必要な境界 |
 |---|---|---|
