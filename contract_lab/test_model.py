@@ -266,6 +266,15 @@ class ContractBehavior(unittest.TestCase):
         self.assertFalse(self.m.complete_job(job))
         self.assertIsNone(self.m.report)
 
+    def test_withdrawal_revokes_recruiter_reads_but_preserves_candidate_access(self):
+        self.consent(); self.answer(); self.finish(); self.m.complete_job(self.m.job)
+        self.call('withdrawConsent', {'request_deletion': False, 'confirmed': True}, status=202)
+        self.call('getReport')
+        self.call('getInterview')
+        self.call('getReport', actor=RECRUITER, status=403)
+        self.call('getInterview', actor=RECRUITER, status=403)
+        with self.assertRaises(Rejected): self.m.replay(0, RECRUITER)
+
     def test_sse_replay_order_dedupe_and_authorization(self):
         self.consent(); self.answer(); self.correction()
         last = self.m.s['last_seq']

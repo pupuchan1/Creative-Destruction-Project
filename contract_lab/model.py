@@ -125,6 +125,8 @@ class Scenario:
             allowed = 'candidate_self' in OPERATIONS[operation]['x-roles']
         elif role == 'recruiter':
             require(actor.subject in self.assigned, 'NOT_FOUND', 404)
+            require(not (self.s['state'] == 'cancelled' and not self.s['consent_active']),
+                    'CONSENT_WITHDRAWN', 403)
             allowed = 'assigned_recruiter' in OPERATIONS[operation]['x-roles']
         else:
             allowed = role == 'tenant_admin' and 'tenant_admin' in OPERATIONS[operation]['x-roles']

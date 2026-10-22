@@ -20,7 +20,7 @@ python -m contract_lab.export_scenarios --check
 
 v0.2のローカル検証は成功：21パス/23操作、13件のrequest/response fixture、6件の基本SSEイベント、4つの通し操作シナリオ、レポート根拠、4件の不正形式、providerテンプレート、同意hashと文書リンク。検証に用いた依存版はrequirements-contracts.txtで固定している。
 
-実行可能な参考モデルの31件と、usage/試算の5件、合計36件のunittestが成功。TypeScript 7.0.2の`tsc --noEmit --strict`でも生成型と成功/エラー応答の判別、意図的な不正型の拒否を確認した。モデルはHTTP・マイク・外部API・DBを使っていない。GitHub Actionsの追加定義は存在するが、CIの成否はPRの当該commitのcheckを参照する。
+実行可能な参考モデルの32件と、usage/試算の5件、合計37件のunittestが成功。TypeScript 7.0.2の`tsc --noEmit --strict`でも生成型と成功/エラー応答の判別、意図的な不正型の拒否を確認した。モデルはHTTP・マイク・外部API・DBを使っていない。GitHub Actionsの追加定義は存在するが、CIの成否はPRの当該commitのcheckを参照する。
 
 - OpenAPIの構文、参照、operationIdの一意性。
 - request/response fixtureと各componentの一致。

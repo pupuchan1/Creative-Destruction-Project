@@ -26,7 +26,7 @@
 | [gap-human-review.json](../contracts/scenarios/gap-human-review.json) | 音声終了未確認で409→人が欠落確認→候補者確認→下書き |
 | [withdrawal-deletion.json](../contracts/scenarios/withdrawal-deletion.json) | 撤回→遅い結果を破棄→削除の未完了/完了を区別 |
 | [contract_lab/model.py](../contract_lab/model.py) | 状態・割当scope・訂正・世代・冪等性・削除の実行可能な参考仕様 |
-| [contract_lab/test_model.py](../contract_lab/test_model.py) | 31件の状態・競合・拒否・根拠検証テスト |
+| [contract_lab/test_model.py](../contract_lab/test_model.py) | 32件の状態・競合・拒否・根拠検証テスト |
 | [contract_lab/costs.py](../contract_lab/costs.py) | 累計usageを二重加算せず、再接続と最終化未確認を区別する試算 |
 
 Webは静的JSONの`initial_snapshot`を表示し、`steps`のrequest/response/snapshotを順にモックへ返せる。`kind:server_fixture`は裏側の仮イベントであり公開APIではない。実際の音声やログイン成功を示す表示は出さない。生成レポートのmodel名は`offline-fixture`で、本物のモデルを呼んだように表示しない。
