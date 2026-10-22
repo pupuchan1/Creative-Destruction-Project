@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/haas/next-step.schema.json",
+  "title": "HaaS internal next-step proposal v0.1",
+  "type": "object",
+  "properties": {
+    "action": {
+      "type": "string",
+      "enum": [
+        "ask",
+        "repeat",
+        "clarify",
+        "request_pause",
+        "request_finish",
+        "request_correction",
+        "request_withdrawal",
+        "human_review",
+        "wait"
+      ],
+      "description": "A conversational proposal; never execute consent, completion or hiring decisions."
+    },
+    "question_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Allowed next question for ask; current question for repeat/clarify; otherwise null."
+    },
+    "utterance_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "utterance_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "utterance_revision": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "utterance_id",
+          "utterance_revision"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 8
+    },
+    "clarification_text": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Only for clarify. Not forwarded to speech when freeform_clarifications is disabled."
+    }
+  },
+  "required": [
+    "action",
+    "question_id",
+    "utterance_refs",
+    "clarification_text"
+  ],
+  "additionalProperties": false
+}

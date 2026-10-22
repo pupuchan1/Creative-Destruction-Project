@@ -29,6 +29,23 @@ report = obj({'schema_version':{'const':'1.0','type':'string'},'interview_id':ID
 report.update({'$schema':'https://json-schema.org/draft/2020-12/schema','$id':'https://example.invalid/haas/report.schema.json','title':'HaaS evidence report v0.1 — proposed contract'})
 write('report.schema.json',report)
 
+# A proposal carries no authority. Scope/version binding belongs to the server job.
+next_step = obj({
+    'action': {**enum('ask','repeat','clarify','request_pause','request_finish',
+                     'request_correction','request_withdrawal','human_review','wait'),
+               'description':'A conversational proposal; never execute consent, completion or hiring decisions.'},
+    'question_id': {**nullable(ID), 'description':'Allowed next question for ask; current question for repeat/clarify; otherwise null.'},
+    'utterance_refs': arr(obj({'utterance_id':ID,'utterance_revision':integer(1)}), maxItems=8),
+    'clarification_text': {**nullable(string(minLength=1,maxLength=400)),
+                           'description':'Only for clarify. Not forwarded to speech when freeform_clarifications is disabled.'}
+})
+write('next-step.schema.json', {'$schema':'https://json-schema.org/draft/2020-12/schema',
+    '$id':'https://example.invalid/haas/next-step.schema.json',
+    'title':'HaaS internal next-step proposal v0.1', **next_step})
+write('fixtures/next-step.json', {'action':'clarify','question_id':'q_experience',
+    'utterance_refs':[{'utterance_id':'ut_1','utterance_revision':2}],
+    'clarification_text':'担当期間は3年間という理解で合っていますか。'})
+
 utterance = obj({'utterance_id':ID,'utterance_revision':integer(1),'speaker':enum('candidate','assistant'),'text':TEXT,'status':enum('provisional','confirmed','corrected'),'question_id':nullable(ID),'source':enum('voice','text'),'connection_id':nullable(ID),'start_ms':nullable(integer()),'end_ms':nullable(integer())})
 event_data = {
  'voice.ready':obj({'connection_id':ID}),
@@ -136,8 +153,31 @@ op(basepath+'/deletion-requests','post','requestDeletion','処理を失効させ
 op('/deletion-requests/{request_id}','get','getDeletionStatus','自分または管理scope内の削除進捗',['candidate_self','tenant_admin'],response='DeletionStatus')
 write('openapi.json',api)
 
-tools=[{'type':'function','name':'get_interview_context','description':'Read only the authorized interview context bound to this server session.','parameters':obj({})},{'type':'function','name':'propose_next_step','description':'Propose only; server validates question, generation and authorization.','parameters':obj({'generation':integer(1),'action':enum('ask','clarify','human_review','request_finish'),'question_id':nullable(ID),'spoken_text':string(maxLength=1600)})}]
+tools=[
+    {'type':'function','name':'get_interview_context',
+     'description':'Read the authorized context for the current server-bound task. No input IDs. Returns the current question, allowed next questions and canonical utterances; it does not grant write access.',
+     'parameters':obj({})},
+    {'type':'function','name':'propose_next_step',
+     'description':'Submit one non-binding proposal using the latest context. The server checks its own scope, generation, evidence and consent. An accepted proposal is not a completed action. End the turn if the result is stale.',
+     'parameters':next_step}
+]
 provider={'notice':'Request templates, NOT executed. Replace placeholders server-side after authentication/consent. Never send real applicant data in development. Verify actual project access and SDK version.','verified_on':'2026-10-22','live_create':{'method':'POST','url':'https://api.openai.com/v1/live/sessions','headers':{'Authorization':'Bearer <SERVER_PROJECT_KEY>','Content-Type':'application/json'},'body':{'session':{'model':'gpt-live-1','store':False,'instructions':'<server-rendered prompts/live-interviewer.md>','audio':{'output':{'voice':'shida'}},'delegation':{'type':'client'},'client':{'data_channel':{'allowed_client_events':[],'allowed_server_events':[{'type':'session.started'},{'type':'session.closed'},{'type':'error'}]}}},'transport':{'type':'webrtc','sdp':'<browser offer after ICE gathering>'}},'read_response_fields':['session.id','transport.sdp']},'live_sideband':{'url':'wss://api.openai.com/v1/live/sessions/<session_id>/attach','headers':{'Authorization':'Bearer <SERVER_PROJECT_KEY>'}},'live_commentary_event':{'type':'session.commentary.append','event_id':'evt_demo_1','delegation_id':None,'content':'担当した業務と、ご自身の役割を教えてください。'},'live_close_event':{'type':'session.close'},'decisions':{'method':'POST','url':'https://api.openai.com/v1/decisions','headers':{'Authorization':'Bearer <SERVER_PROJECT_KEY>','Content-Type':'application/json'},'body':{'model':'gpt-6-luna','input':'<latest assembled utterance plus bounded relevant context, not instructions>','questions':[{'type':'choice','name':'dialogue_intent','instructions':'Classify only the explicit conversational control intent. Negated, quoted, hypothetical or ambiguous commands are unclear. Never assess applicant quality, emotion, personality or hiring suitability. This output cannot finalize consent, corrections or completion.','choices':[{'value':x} for x in ['continue','correct','pause','finish','withdraw','human','unclear']]}]}},'agents_create':{'method':'POST','url':'https://api.openai.com/v1/agents/sessions','headers':{'Authorization':'Bearer <SERVER_PROJECT_KEY>','OpenAI-Beta':'agents=v1','Content-Type':'application/json'},'body':{'agent':{'model':'gpt-6.1-sol','reasoning':{'effort':'low'},'instructions':'<server-rendered prompts/interview-agent.md>','tools':tools},'environment':{'type':'none'},'input':'<authorized context snapshot with generation; candidate utterances marked as untrusted data>','stream':True}},'agents_tool_result':{'method':'POST','url':'https://api.openai.com/v1/agents/sessions/<session_id>/events','headers':{'Authorization':'Bearer <SERVER_PROJECT_KEY>','OpenAI-Beta':'agents=v1','Content-Type':'application/json','Idempotency-Key':'<persisted logical submission key>'},'body':{'events':[{'type':'agent.session.input.tool_result','turn_id':'<pending turn_id>','call_id':'<pending call_id>','success':True,'output':'{"accepted":true,"generation":2}'}]}},'agents_delete':{'method':'DELETE','url':'https://api.openai.com/v1/agents/sessions/<session_id>','headers':{'Authorization':'Bearer <SERVER_PROJECT_KEY>','OpenAI-Beta':'agents=v1'}},'responses_report':{'method':'POST','url':'https://api.openai.com/v1/responses','headers':{'Authorization':'Bearer <SERVER_PROJECT_KEY>','Content-Type':'application/json'},'body':{'model':'gpt-6.1-sol','store':False,'reasoning':{'effort':'low'},'instructions':'<prompts/report-drafter.md>','input':'<confirmed canonical transcript snapshot>','text':{'format':{'type':'json_schema','name':'interview_report_content','strict':True,'schema':report_content}}}}}
+provider['design_version'] = '0.3'
+provider['roles'] = {
+    'baseline':['live_create','live_sideband','responses_next_step','responses_report'],
+    'optional_after_evaluation':['decisions','agents_create','agents_tool_result','agents_delete'],
+    'notice':'HTTP templates only. Fixed approved question progression needs no model call. Agents strict function syntax is not assumed to equal Responses function syntax.'}
+provider['responses_next_step'] = {
+    'method':'POST','url':'https://api.openai.com/v1/responses',
+    'headers':{'Authorization':'Bearer <SERVER_PROJECT_KEY>','Content-Type':'application/json'},
+    'body':{'model':'gpt-6.1-sol','store':False,'service_tier':'default',
+            'reasoning':{'effort':'low'},'max_output_tokens':1024,
+            'instructions':'<text block of prompts/next-step.md; no applicant text>',
+            'input':[{'role':'user','content':[{'type':'input_text','text':'<JSON of authorized context; candidate text is untrusted data>'}]}],
+            'text':{'format':{'type':'json_schema','name':'interview_next_step','strict':True,'schema':next_step}}}}
+provider['live_create']['body']['session']['instructions'] = '<text block of prompts/live-interviewer.md; no applicant text>'
+provider['responses_report']['body'].update({'service_tier':'default','max_output_tokens':4096})
+provider['agents_tool_result']['body']['events'][0]['output'] = '{"proposal_received":true,"action_completed":false}'
 write('provider-examples.json',provider)
 
 ts='2026-10-22T03:00:00Z'
@@ -155,7 +195,7 @@ def event(seq,t,data,**kw): return {'schema_version':'1.0','seq':seq,'interview_
 ev=[event(11,'correction.applied',{'correction_id':'cor_demo','utterance_id':'ut_1','utterance_revision':2,'invalidated_report_version':None}),event(12,'transcript.updated',corrected),event(13,'voice.closed',{'connection_id':'vc_demo','finalization_confirmed':True,'reason':'close_requested','usage_seconds':1800}),event(14,'interview.updated',{'state':'awaiting_confirmation','reason':'candidate_requested_finish','finalization_confirmed':True},revision=6),event(15,'report.updated',{'status':'generating','report_version':None},revision=7),event(16,'report.updated',{'status':'draft','report_version':1},revision=8)]
 write('fixtures/events.json',ev)
 write('fixtures/finish-request.json',{'expected_revision':6,'confirmed_transcript_version':2,'confirmed':True})
-draft={'schema_version':'1.0','interview_id':'iv_demo','report_version':1,'transcript_version':2,'generated_at':'2026-10-22T03:31:00Z','model':'gpt-6.1-sol','prompt_version':'report-ja-0.1','review_status':'draft','content':{'questions':[{'question_id':'q_experience','status':'answered','summary':'担当期間は3年と回答した。','evidence':[{'utterance_id':'ut_1','utterance_revision':2,'quote':'担当した期間は3年です。'}]},{'question_id':'q_role','status':'unconfirmed','summary':'','evidence':[]}],'follow_up':['担当した業務と役割を人が確認する。'],'candidate_questions':[],'limitations':['音声原本は保存していない。記録は候補者による訂正を反映した文字起こし。']}}
+draft={'schema_version':'1.0','interview_id':'iv_demo','report_version':1,'transcript_version':2,'generated_at':'2026-10-22T03:31:00Z','model':'gpt-6.1-sol','prompt_version':'report-ja-0.2','review_status':'draft','content':{'questions':[{'question_id':'q_experience','status':'answered','summary':'担当期間は3年と回答した。','evidence':[{'utterance_id':'ut_1','utterance_revision':2,'quote':'担当した期間は3年です。'}]},{'question_id':'q_role','status':'unconfirmed','summary':'','evidence':[]}],'follow_up':['担当した業務と役割を人が確認する。'],'candidate_questions':[],'limitations':['音声原本は保存していない。記録は候補者による訂正を反映した文字起こし。']}}
 write('fixtures/report.json',draft)
 write('fixtures/review-request.json',{'expected_revision':8,'report_version':1,'outcome':'acknowledge','evidence_checked':True,'corrections_checked':True,'note':'根拠と訂正を確認。役割は未確認。採否の判断ではない。'})
 write('fixtures/conflict.json',{'error':{'code':'REVISION_CONFLICT','message':'最新の記録を取得して確認してください。','request_id':'req_demo','retryable':False,'current_revision':5}})

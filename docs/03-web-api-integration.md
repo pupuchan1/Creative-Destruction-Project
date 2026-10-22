@@ -1,6 +1,6 @@
 # Web担当者向け接続契約
 
-新提案 v0.2。正確なフィールドとレスポンスは[OpenAPI](../contracts/openapi.json)を正とし、SSEは[イベントスキーマ](../contracts/events.schema.json)に従う。以下のパスはすべてアプリ独自APIであり、OpenAIのAPIパスではない。
+公開契約は新提案 v0.2（設計説明はv0.3へ更新）。正確なフィールドとレスポンスは[OpenAPI](../contracts/openapi.json)を正とし、SSEは[イベントスキーマ](../contracts/events.schema.json)に従う。以下のパスはすべてアプリ独自APIであり、OpenAIのAPIパスではない。
 
 ## 共通ルール
 
@@ -86,7 +86,7 @@ snapshotは`template`（職務と不変の質問版）、`current_question_id`�
 
 Nodeは面談ID・接続ID・generationを固定したサービス資格で業務APIにイベントを書き込む。公開OpenAPIには内部書き込み口を露出しない。内部受信は`provider_event_id`、type、timestamps、payloadを受け、認可済み接続レコードと照合してraw保存→正規化→outboxを一度だけcommitする。
 
-Agentsへ公開する関数は`get_interview_context`（当該面談の許可済み情報のみ）と`propose_next_step`（質問ID・確認内容の提案）の2つ。引数から任意tenant、URL、SQLを指定できない。関数の実行権限はモデル出力から得ず、呼出元sessionに固定する。`propose_next_step`はDBの採否・状態を直接更新しない。
+基準の単発Responsesは[next-step schema](../contracts/next-step.schema.json)で提案だけを返す。Agents比較時に公開する関数は`get_interview_context`（当該面談の許可済み情報のみ）と`propose_next_step`（質問ID・確認内容の提案）の2つ。引数から任意tenant、URL、SQLを指定できない。関数の実行権限はモデル出力から得ず、呼出元sessionに固定する。`propose_next_step`はDBの採否・状態を直接更新しない。
 
 AI担当からWeb担当への納品単位：この契約、provider adapterの状態通知、プロンプトバージョン、fixture。Web担当からAI担当への納品単位：認可済み面談context、保存/訂正/同意API、永続イベント、ジョブ完了callback。実名の担当者とレビュー日程は別途確認する。
 
@@ -111,3 +111,9 @@ AI担当からWeb担当への納品単位：この契約、provider adapterの�
 表示互換の暫定マッピングは、`invited`→awaiting_consent/ready、`in_progress`→connecting/active/paused/awaiting_confirmation/finalizing、`review_pending`→review_pending。reviewed/cancelled/failedは別ラベルを追加する。一括で逆変換して状態を更新しない。
 
 既存の`Permissions-Policy`はmicrophoneを拒否し、CSP connect-srcはselfのみ。接続する候補者画面に限ってマイクと実際に必要なOpenAI/WebRTC先を許可する変更が必要。認証・同意・Origin検証と一緒にレビューし、全サイトを無制限に許可しない。プロトタイプのREADMEにある24系Nodeの固定バージョンとlockfileを継続し、本設計のために既存future-companyの古いruntime設定へ戻さない。
+
+## v0.3で追加した音声再生側の責任
+
+マイク入力停止、モデル音声の再生停止、backend処理取消は別操作。Webの停止・訂正・撤回ではローカル入力trackだけでなく必要な出力もmuteし、待機音声を破棄する。サーバーのinstruction ackは再開の合図にしない。正本とgenerationが更新され、安全な次の音声へ切り替えられた後、本人の再開操作で復帰する。音声を安全に切り離せない場合はvoice closeを待って新接続にする。
+
+事前同意文は固定表示で取得する。音声説明が必須なら検証済みクリップとアプリの再生完了観測を用い、Liveのcommentaryで逐語説明や到達を保証しない。直接WebRTCの即時再生では全音声の再生前検査はない。この条件が必要なら[別経路を評価する](10-openai-guidance-review.md)。HTTP/SSEの既存23操作は変更しない。内部next-step、modelやtierの設定はブラウザーへ公開しない。

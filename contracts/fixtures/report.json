@@ -5,7 +5,7 @@
   "transcript_version": 2,
   "generated_at": "2026-10-22T03:31:00Z",
   "model": "gpt-6.1-sol",
-  "prompt_version": "report-ja-0.1",
+  "prompt_version": "report-ja-0.2",
   "review_status": "draft",
   "content": {
     "questions": [

@@ -10,7 +10,7 @@
 
 ポリシーはversion＋hashをサーバーで固定し、表示された内容と受領記録を結びつける。時刻、主体、面談、明示操作、localeを保存する。接続の都合で更新された規約へ自動的に同意した扱いにしない。マイク権限は同意後に要求する。
 
-同意撤回時はローカル音声を即停止し、サーバーで同意失効・generation更新・Live close・Agents cancel・待機ジョブ取消を行う。以後の生成結果は破棄する。撤回と削除の進捗は別に表示し、「完了」を先に返さない。
+同意撤回時はローカル音声を即停止し、サーバーで同意失効・generation更新・Live close・backend取消（Agents使用時はcancel）・待機ジョブ取消を行う。以後の生成結果は破棄する。撤回と削除の進捗は別に表示し、「完了」を先に返さない。
 
 撤回後は担当者のsnapshot/report閲覧と既存SSEも失効させる。候補者本人は保存中の自分の記録確認と削除要求を継続できる。法的な保持等を理由に別のアクセスが必要な場合は、その根拠と限定権限を運用で定める必要があり、通常の担当者権限へ暗黙に残さない。
 
@@ -20,7 +20,7 @@
 |---|---|---|
 | 音声原本 | 保存しない | Live `store:false`、アプリの録音・media dump・APM本文収集を無効化 |
 | 文字断片・正規発話・訂正・レポート | 面談終了から30日、顧客目的に応じて確定 | private DB、暗号化、期限ジョブ。未終了の面談も最終活動から期限を起算 |
-| Agentsの会話状態 | 作業に必要な間だけ。終了後削除、失敗時も24時間以内を目標 | provider session IDの削除キュー・再試行・失敗通知。`none`でも保持される |
+| 任意採用時のAgents会話状態 | 作業に必要な間だけ。終了後削除、失敗時も24時間以内を目標 | provider session IDの削除キュー・再試行・失敗通知。`none`でも保持される |
 | 同意・アクセス監査 | 本文を含めず90日を仮設定 | 法的根拠・実運用の必要期間を確認して確定 |
 | 冪等応答・SSE再生 | 最大24時間の操作応答、本文イベントは文字記録の期限以内 | 秘密・SDPを平文ログに出さず、保持期限到来で消去 |
 | バックアップ | 最大35日を提案、実際のサービス設定を確認 | 復元時に削除tombstoneを適用して候補者データを復活させない |
@@ -29,7 +29,7 @@
 
 OpenAI APIのデータは通常、明示的なopt-inなしにモデル学習へ使われない。ただし通常のabuse monitoring保持は最大30日（例外あり）、アプリケーション状態の保持はendpointで異なる。`store:false`はZDRと同義ではない。Agentsは削除まで状態を保持し、ZDR対象外。ZDR/MAMは資格・承認条件がある。根拠：[Your data](https://developers.openai.com/api/docs/guides/your-data)。
 
-ZDR必須の顧客には、このAgents構成を適合と説明しない。stateless Responses中心の別設計と当該endpointのデータ制御をレビューし、切替を合意する。GPT-Live等の地域対応はUS/EUを確認できるが、日本国内完結とは説明しない。アプリDBを日本に置くだけで全処理が国内になるわけではない。
+ZDR必須の顧客にはAgentsを使う案を適合と説明しない。v0.3の基準案は単発Responses中心だが、これだけでZDR適合とはならず、各endpoint・model・cache・実projectのデータ制御をレビューする。GPT-Live等の地域対応はUS/EUを確認できるが、日本国内完結とは説明しない。アプリDBを日本に置くだけで全処理が国内になるわけではない。
 
 国外処理、委託先管理、本人への情報提供・同意等の適用関係は[個人情報保護委員会の外国第三者提供ガイドライン](https://www.ppc.go.jp/personalinfo/legal/guidelines_offshore/)と[通則編](https://www.ppc.go.jp/personalinfo/legal/guidelines_tsusoku/)を基準に、契約・処理主体を確定して確認する。候補者の削除要求がOpenAIのabuse logsまで即時削除するとの約束はしない。
 
@@ -70,3 +70,9 @@ PostgreSQLのRLSと業務APIの認可を併用する。service_roleはRLSを回�
 | 招待やCookieの漏洩 | tokenのURL除去、no-referrer、no-store、CSRF/Origin、短期・一回交換 |
 | ログからの情報漏洩 | 音声/SDP/Authorization/全文の収集off、request IDとエラーコード中心 |
 | 削除中に再生成・backupから復活 | revoked/tombstoneを先に保存、全workerで検査、restore時再適用 |
+
+## 公式推奨の取込みに伴う追加条件
+
+原文は権限制御された正本へ保存し、通常ログにはID・状態・usage・遅延だけを残す。Agentsのtraceには入力/出力/ツール引数が含まれ得るため、比較採用時はtrace閲覧・export先もアクセス/削除の確認対象にする。実候補者の記録を評価データへ自動流用しない。
+
+Responsesのstore:falseでもprompt cacheは別の保持条件を持ち、GPT-6系のttlは削除期限を表す値ではない。手動cache消去が可能とは説明しない。処理地域、通常のabuse monitoring、アプリ状態、cacheを分けて利用説明を作る。根拠は[公式照合のG10/G11/G15](10-openai-guidance-review.md)。

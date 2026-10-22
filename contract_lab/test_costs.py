@@ -34,6 +34,21 @@ class UsageAccounting(unittest.TestCase):
         with self.assertRaises(ValueError): usage.observe('one', 10, final=True)
         with self.assertRaises(ValueError): usage.estimate(model_input=-1)
 
+    def test_cache_buckets_replace_uncached_price_without_double_charge(self):
+        usage = VoiceUsage()
+        # 10k ordinary + 10k read + 10k 30m write + 10k 12h write.
+        result = usage.estimate(model_input=40000, cache_read=10000,
+                                cache_write_30m=10000, cache_write_12h=10000)
+        self.assertEqual(Decimal(result['text_usd']), Decimal('0.096'))
+
+    def test_inconsistent_or_invalid_cache_breakdown_is_rejected(self):
+        usage = VoiceUsage()
+        with self.assertRaises(ValueError):
+            usage.estimate(model_input=100, cache_read=80, cache_write_30m=30)
+        for value in (-1, 'NaN', 'Infinity'):
+            with self.assertRaises(ValueError):
+                usage.estimate(model_input=100, cache_write_12h=value)
+
 
 if __name__ == '__main__':
     unittest.main()

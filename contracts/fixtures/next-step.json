@@ -1,0 +1,11 @@
+{
+  "action": "clarify",
+  "question_id": "q_experience",
+  "utterance_refs": [
+    {
+      "utterance_id": "ut_1",
+      "utterance_revision": 2
+    }
+  ],
+  "clarification_text": "担当期間は3年間という理解で合っていますか。"
+}

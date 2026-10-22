@@ -85,6 +85,26 @@ assert provider['agents_create']['body']['environment']['type'] == 'none'
 assert provider['responses_report']['body']['store'] is False
 assert provider['responses_report']['body']['text']['format']['schema'] == report_schema['properties']['content']
 
+# Proposal structure is checked offline; authorization and semantic fidelity need runtime/evals.
+next_step_schema = read(C / 'next-step.schema.json')
+Draft202012Validator.check_schema(next_step_schema)
+next_step_validator = Draft202012Validator(next_step_schema)
+proposal = read(C / 'fixtures/next-step.json')
+next_step_validator.validate(proposal)
+for e in proposal['utterance_refs']:
+    assert utterances[e['utterance_id']]['utterance_revision'] == e['utterance_revision']
+for field, value in [('generation',999), ('tenant_id','other_tenant'), ('hire_score',99)]:
+    bad = {**proposal, field:value}
+    assert not next_step_validator.is_valid(bad)
+bad = {**proposal, 'action':'hire'}
+assert not next_step_validator.is_valid(bad)
+proposal_body = provider['responses_next_step']['body']
+assert proposal_body['store'] is False and proposal_body['text']['format']['strict'] is True
+assert proposal_body['text']['format']['schema'] == {
+    k:v for k,v in next_step_schema.items() if k not in {'$schema','$id','title'}}
+assert 'previous_response_id' not in proposal_body and 'conversation' not in proposal_body
+assert provider['agents_create']['body']['agent']['tools'][1]['parameters'] == proposal_body['text']['format']['schema']
+
 scenario_count = 0
 for path in (C / 'scenarios').glob('*.json'):
     scenario = read(path)
@@ -114,6 +134,16 @@ for case in intent_cases:
     assert set(case['expected']) <= allowed_intents and case['expected']
     assert case['must_not_finalize'] is True
 
+voice_spec = read(C / 'evaluations/voice-scenarios.json')
+voice_cases = voice_spec['cases']
+assert voice_spec['status'] == 'not_run'
+assert len({c['id'] for c in voice_cases}) == len(voice_cases)
+for case in voice_cases:
+    assert case['expected_delegation'] in {'required','optional','forbidden'}
+    assert case['modes'] and set(case['modes']) <= {'crawl','walk','run'}
+    for field in ('caller_input','setup','must','must_not','evidence'):
+        assert case[field], f'Missing evaluation specification: {case["id"]}/{field}'
+
 links = 0
 for md in ROOT.rglob('*.md'):
     for target in re.findall(r'\]\(([^)]+)\)', md.read_text()):
@@ -125,6 +155,7 @@ for md in ROOT.rglob('*.md'):
 print(f'PASS: OpenAPI {len(api["paths"])} paths / {len(operations)} operations; '
       f'{len(manifest)} request/response fixtures; {len(events)} SSE events; '
       f'report evidence; 4 invalid-shape checks; provider-template consistency; '
-      f'{scenario_count} Web scenarios; {len(intent_cases)} evaluation cases (not model-run); '
+      f'{scenario_count} Web scenarios; next-step schema and 4 invalid proposals; '
+      f'{len(intent_cases)} intent / {len(voice_cases)} voice specifications (not model-run); '
       f'consent hash; {links} local links.')
 print('NOT TESTED: live APIs, microphone audio, latency, billing, auth/RLS/CSRF, deletion, E2E.')

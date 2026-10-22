@@ -12,7 +12,7 @@
       "session": {
         "model": "gpt-live-1",
         "store": false,
-        "instructions": "<server-rendered prompts/live-interviewer.md>",
+        "instructions": "<text block of prompts/live-interviewer.md; no applicant text>",
         "audio": {
           "output": {
             "voice": "shida"
@@ -124,7 +124,7 @@
           {
             "type": "function",
             "name": "get_interview_context",
-            "description": "Read only the authorized interview context bound to this server session.",
+            "description": "Read the authorized context for the current server-bound task. No input IDs. Returns the current question, allowed next questions and canonical utterances; it does not grant write access.",
             "parameters": {
               "type": "object",
               "properties": {},
@@ -135,22 +135,24 @@
           {
             "type": "function",
             "name": "propose_next_step",
-            "description": "Propose only; server validates question, generation and authorization.",
+            "description": "Submit one non-binding proposal using the latest context. The server checks its own scope, generation, evidence and consent. An accepted proposal is not a completed action. End the turn if the result is stale.",
             "parameters": {
               "type": "object",
               "properties": {
-                "generation": {
-                  "type": "integer",
-                  "minimum": 1
-                },
                 "action": {
                   "type": "string",
                   "enum": [
                     "ask",
+                    "repeat",
                     "clarify",
+                    "request_pause",
+                    "request_finish",
+                    "request_correction",
+                    "request_withdrawal",
                     "human_review",
-                    "request_finish"
-                  ]
+                    "wait"
+                  ],
+                  "description": "A conversational proposal; never execute consent, completion or hiring decisions."
                 },
                 "question_id": {
                   "anyOf": [
@@ -163,18 +165,52 @@
                     {
                       "type": "null"
                     }
-                  ]
+                  ],
+                  "description": "Allowed next question for ask; current question for repeat/clarify; otherwise null."
                 },
-                "spoken_text": {
-                  "type": "string",
-                  "maxLength": 1600
+                "utterance_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "utterance_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128,
+                        "pattern": "^[A-Za-z0-9_-]+$"
+                      },
+                      "utterance_revision": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    },
+                    "required": [
+                      "utterance_id",
+                      "utterance_revision"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "maxItems": 8
+                },
+                "clarification_text": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 400
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "Only for clarify. Not forwarded to speech when freeform_clarifications is disabled."
                 }
               },
               "required": [
-                "generation",
                 "action",
                 "question_id",
-                "spoken_text"
+                "utterance_refs",
+                "clarification_text"
               ],
               "additionalProperties": false
             }
@@ -204,7 +240,7 @@
           "turn_id": "<pending turn_id>",
           "call_id": "<pending call_id>",
           "success": true,
-          "output": "{\"accepted\":true,\"generation\":2}"
+          "output": "{\"proposal_received\":true,\"action_completed\":false}"
         }
       ]
     }
@@ -367,6 +403,138 @@
               "follow_up",
               "candidate_questions",
               "limitations"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "service_tier": "default",
+      "max_output_tokens": 4096
+    }
+  },
+  "design_version": "0.3",
+  "roles": {
+    "baseline": [
+      "live_create",
+      "live_sideband",
+      "responses_next_step",
+      "responses_report"
+    ],
+    "optional_after_evaluation": [
+      "decisions",
+      "agents_create",
+      "agents_tool_result",
+      "agents_delete"
+    ],
+    "notice": "HTTP templates only. Fixed approved question progression needs no model call. Agents strict function syntax is not assumed to equal Responses function syntax."
+  },
+  "responses_next_step": {
+    "method": "POST",
+    "url": "https://api.openai.com/v1/responses",
+    "headers": {
+      "Authorization": "Bearer <SERVER_PROJECT_KEY>",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "model": "gpt-6.1-sol",
+      "store": false,
+      "service_tier": "default",
+      "reasoning": {
+        "effort": "low"
+      },
+      "max_output_tokens": 1024,
+      "instructions": "<text block of prompts/next-step.md; no applicant text>",
+      "input": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "<JSON of authorized context; candidate text is untrusted data>"
+            }
+          ]
+        }
+      ],
+      "text": {
+        "format": {
+          "type": "json_schema",
+          "name": "interview_next_step",
+          "strict": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "enum": [
+                  "ask",
+                  "repeat",
+                  "clarify",
+                  "request_pause",
+                  "request_finish",
+                  "request_correction",
+                  "request_withdrawal",
+                  "human_review",
+                  "wait"
+                ],
+                "description": "A conversational proposal; never execute consent, completion or hiring decisions."
+              },
+              "question_id": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9_-]+$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Allowed next question for ask; current question for repeat/clarify; otherwise null."
+              },
+              "utterance_refs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "utterance_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9_-]+$"
+                    },
+                    "utterance_revision": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "required": [
+                    "utterance_id",
+                    "utterance_revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 8
+              },
+              "clarification_text": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 400
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Only for clarify. Not forwarded to speech when freeform_clarifications is disabled."
+              }
+            },
+            "required": [
+              "action",
+              "question_id",
+              "utterance_refs",
+              "clarification_text"
             ],
             "additionalProperties": false
           }
