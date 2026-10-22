@@ -1,0 +1,38 @@
+{
+  "name": "haas",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24.22.1 <25",
+    "npm": ">=11.19.1 <12"
+  },
+  "packageManager": "npm@11.19.1",
+  "scripts": {
+    "preinstall": "node scripts/check-node.mjs",
+    "predev": "node scripts/check-node.mjs",
+    "dev": "npm run dev --workspace @haas/web",
+    "dev:api": "wrangler dev --config apps/api/wrangler.jsonc --ip 127.0.0.1",
+    "build": "node scripts/check-node.mjs && npm run build --workspace @haas/web",
+    "build:preview": "node scripts/check-node.mjs && node scripts/build-preview.mjs",
+    "preview": "npm run preview --workspace @haas/web",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "node --test tests/api.test.ts",
+    "test:e2e": "npm run build && npm run build:preview && playwright test",
+    "test": "npm run test:unit && npm run test:e2e",
+    "audit": "npm audit --audit-level=low",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/node": "24.19.2",
+    "prettier": "3.9.10",
+    "typescript": "7.0.2",
+    "wrangler": "4.151.3"
+  }
+}
