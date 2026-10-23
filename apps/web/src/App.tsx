@@ -3,6 +3,13 @@ import type { ReactNode } from 'react';
 import { Link, NavLink, Outlet, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { interviewStatusLabels } from '@haas/domain';
 import { interviews } from './sample';
+import {
+  CandidateFlowProvider,
+  CandidateCheck,
+  Conversation,
+  CandidateSummary,
+  Complete,
+} from './features/candidate/CandidateFlow';
 
 function Brand() {
   return (
@@ -506,45 +513,49 @@ function Login() {
   );
 }
 
-const candidateSteps = ['ご案内', '利用前の確認', '対話', '完了'];
+const candidateSteps = ['ご案内', '仕事の希望', '質問に回答', '要約の確認', '完了'];
 function CandidateLayout() {
   const path = useLocation().pathname;
   const step = path.endsWith('/check')
     ? 1
     : path.endsWith('/conversation')
       ? 2
-      : path.endsWith('/complete')
+      : path.endsWith('/summary')
         ? 3
-        : 0;
+        : path.endsWith('/complete')
+          ? 4
+          : 0;
   return (
-    <div className="standalone candidate-shell">
-      <a className="skip-link" href="#main">
-        本文へ移動
-      </a>
-      <header>
-        <Brand />
-        <Link className="text-link" to="/">
-          企業画面へ戻る
-        </Link>
-      </header>
-      <main id="main" className={`candidate-main candidate-step-${step}`}>
-        <Notice />
-        <ol className="steps" aria-label="面談の流れ">
-          {candidateSteps.map((name, i) => (
-            <li
-              key={name}
-              className={i === step ? 'current' : i < step ? 'past' : ''}
-              aria-current={i === step ? 'step' : undefined}
-            >
-              <span>{i < step ? '✓' : String(i + 1).padStart(2, '0')}</span>
-              {name}
-            </li>
-          ))}
-        </ol>
-        <Outlet />
-      </main>
-      <p className="standalone-foot">HaaS 採用対話 / 画面確認用のサンプル</p>
-    </div>
+    <CandidateFlowProvider>
+      <div className="standalone candidate-shell">
+        <a className="skip-link" href="#main">
+          本文へ移動
+        </a>
+        <header>
+          <Brand />
+          <Link className="text-link" to="/">
+            企業画面へ戻る
+          </Link>
+        </header>
+        <main id="main" className={`candidate-main candidate-step-${step}`}>
+          <Notice />
+          <ol className="steps" aria-label="面談の流れ">
+            {candidateSteps.map((name, i) => (
+              <li
+                key={name}
+                className={i === step ? 'current' : i < step ? 'past' : ''}
+                aria-current={i === step ? 'step' : undefined}
+              >
+                <span>{i < step ? '✓' : String(i + 1).padStart(2, '0')}</span>
+                {name}
+              </li>
+            ))}
+          </ol>
+          <Outlet />
+        </main>
+        <p className="standalone-foot">HaaS 採用対話 / 画面確認用のサンプル</p>
+      </div>
+    </CandidateFlowProvider>
   );
 }
 
@@ -560,9 +571,9 @@ function CandidateIntro() {
             <br />
             <span className="accent">あなたの言葉で。</span>
           </h1>
-          <p className="muted">プロダクトデザイナー / 事前ヒアリング</p>
+          <p className="muted">興味のある仕事と、あなたの経験を整理する事前ヒアリング</p>
           <p>
-            これまで取り組んできたこと、これから挑戦したいこと。対話を通じて、あなたの経験を伺います。
+            やってみたい仕事を選び、4つの質問に回答。お話の要点を次の画面で確認し、伝え足りないことを補足できます。今回はダミー回答で一連の流れを体験できます。
           </p>
           <Link className="button primary" to="/candidate/demo/check">
             利用前の確認へ <span aria-hidden="true">↗</span>
@@ -583,115 +594,20 @@ function CandidateIntro() {
           <span className="feature-number" aria-hidden="true">
             01
           </span>
-          <strong>自分のペースで</strong>
-          <p>考えながら、言い直しても大丈夫。</p>
+          <strong>興味と経験を伝える</strong>
+          <p>職種を選び、経験やこれからの希望を4つの質問で整理します。</p>
         </div>
         <div>
           <span className="feature-number" aria-hidden="true">
             02
           </span>
-          <strong>人が記録を確認</strong>
-          <p>担当者が内容を確認し、次へ進めます。</p>
+          <strong>要約を見て、何度でも直す</strong>
+          <p>受け取った内容を確認し、答え直しや補足で整えられます。</p>
         </div>
       </div>
       <div className="info-box">
-        現在は画面の流れだけを確認できます。音声の送信・録音・応募は行いません。
+        ダミー回答も、自分で書き直した文章も確認できます。音声の送信・録音・応募は行いません。入力は再読み込みで消えます。
       </div>
-    </section>
-  );
-}
-
-function CandidateCheck() {
-  const [agreed, setAgreed] = useState(false);
-  return (
-    <section className="card candidate-card">
-      <p className="eyebrow">BEFORE YOU START</p>
-      <h1 tabIndex={-1}>利用前の確認</h1>
-      <p className="muted">落ち着いてお話しいただける環境をご準備ください。</p>
-      <div className="info-box">
-        <strong>音声機能は現在利用できません</strong>
-        <p>マイクの許可を求めたり、録音したりすることはありません。</p>
-      </div>
-      <UnavailableButton>マイクを確認</UnavailableButton>
-      <div className="consent">
-        <h2>説明と同意の確認</h2>
-        <p>
-          本番では、AIの利用、記録の目的、保存期間、中止方法をここで説明します。現在の同意欄は画面確認用で、正式な同意は記録しません。
-        </p>
-        <label className="checkbox">
-          <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-          画面確認用の説明を確認しました
-        </label>
-      </div>
-      {agreed ? (
-        <Link className="button primary full-width" to="/candidate/demo/conversation">
-          対話画面へ進む →
-        </Link>
-      ) : (
-        <button className="button primary full-width" disabled>
-          対話画面へ進む →
-        </button>
-      )}
-      <Link className="back-link" to="/candidate/demo">
-        ← ご案内に戻る
-      </Link>
-    </section>
-  );
-}
-
-function Conversation() {
-  return (
-    <section className="card candidate-card conversation-card">
-      <p className="eyebrow">CONVERSATION</p>
-      <h1 tabIndex={-1}>対話の準備ができました</h1>
-      <div className="voice-orb" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-        <span />
-        <span />
-      </div>
-      <h2>音声対話は現在利用できません</h2>
-      <p className="muted">
-        API接続後に、ここから対話を始められます。
-        <br />
-        現在は音声の送信・録音を行いません。
-      </p>
-      <UnavailableButton className="button primary">音声対話を開始</UnavailableButton>
-      <div className="conversation-bottom">
-        <Link className="button secondary full-width" to="/candidate/demo/complete">
-          画面確認として完了画面へ →
-        </Link>
-        <Link className="back-link" to="/candidate/demo/check">
-          ← 利用前の確認に戻る
-        </Link>
-        <Link className="text-link" to="/candidate/demo">
-          中止してご案内へ戻る
-        </Link>
-      </div>
-    </section>
-  );
-}
-
-function Complete() {
-  return (
-    <section className="card candidate-card completion-card">
-      <span className="checkmark" aria-hidden="true">
-        ✓
-      </span>
-      <p className="eyebrow spaced">PREVIEW COMPLETE</p>
-      <h1 tabIndex={-1}>画面の確認が完了しました</h1>
-      <p className="muted">
-        説明から対話、終了までの流れは以上です。
-        <br />
-        面談の送信・応募・録音は行っていません。
-      </p>
-      <Link className="button primary full-width" to="/candidate/demo">
-        もう一度確認する
-      </Link>
-      <Link className="back-link" to="/">
-        企業側のサンプル画面へ →
-      </Link>
     </section>
   );
 }
@@ -710,11 +626,11 @@ function NotFound() {
 }
 
 function RouteFocus() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   useEffect(() => {
     document.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true });
     window.scrollTo(0, 0);
-  }, [pathname]);
+  }, [pathname, search]);
   return null;
 }
 
@@ -738,6 +654,7 @@ export function App() {
           <Route index element={<CandidateIntro />} />
           <Route path="check" element={<CandidateCheck />} />
           <Route path="conversation" element={<Conversation />} />
+          <Route path="summary" element={<CandidateSummary />} />
           <Route path="complete" element={<Complete />} />
         </Route>
       </Routes>

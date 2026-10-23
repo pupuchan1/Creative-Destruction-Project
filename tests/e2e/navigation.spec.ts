@@ -47,13 +47,20 @@ test('candidate workflow requires acknowledgement and never starts audio or make
   await expect(page.getByRole('button', { name: '対話画面へ進む' })).toBeDisabled();
   await page.getByRole('button', { name: 'マイクを確認' }).click();
   await expect(page.getByRole('status')).toContainText('現在利用できません');
-  await page.getByRole('checkbox').check();
+  await page.getByRole('checkbox', { name: '画面確認用の説明を確認しました' }).check();
   await page.getByRole('link', { name: '対話画面へ進む' }).click();
   await page.getByRole('button', { name: '音声対話を開始' }).click();
   await expect(page.getByRole('status')).toContainText('現在利用できません');
-  await page.getByRole('link', { name: '画面確認として完了画面へ' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('画面の確認が完了しました');
-  await page.getByRole('link', { name: 'もう一度確認する' }).click();
+  for (let index = 0; index < 4; index++) {
+    await page.getByRole('button', { name: 'ダミー回答を入力' }).click();
+    await page
+      .getByRole('button', { name: index === 3 ? '要約を確認する' : 'この回答で次へ' })
+      .click();
+  }
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('あなたのお話をまとめました');
+  await page.getByRole('button', { name: 'この内容で確認を完了する' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('お話の内容を確認しました');
+  await page.getByRole('button', { name: '最初からもう一度試す' }).click();
   await expect(page).toHaveURL('/candidate/demo');
   expect(unexpectedRequests).toEqual([]);
 });

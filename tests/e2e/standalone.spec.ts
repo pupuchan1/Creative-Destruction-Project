@@ -39,6 +39,16 @@ test('single-file preview works offline, including an isolated HTML preview', as
   await expect(frame.getByRole('heading', { level: 1 })).toHaveText('採用の、今を見渡す。');
   await frame.getByRole('link', { name: '候補者の画面を見る' }).click();
   await expect(frame.getByRole('heading', { level: 1 })).toContainText('あなたの経験を、');
+  await frame.getByRole('link', { name: '利用前の確認へ' }).click();
+  await frame.getByRole('checkbox', { name: '画面確認用の説明を確認しました' }).check();
+  await frame.getByRole('link', { name: '対話画面へ進む' }).click();
+  for (let index = 0; index < 4; index++) {
+    await frame.getByRole('button', { name: 'ダミー回答を入力' }).click();
+    await frame
+      .getByRole('button', { name: index === 3 ? '要約を確認する' : 'この回答で次へ' })
+      .click();
+  }
+  await expect(frame.getByRole('heading', { level: 1 })).toHaveText('あなたのお話をまとめました');
   expect(errors).toEqual([]);
   expect(requests).toEqual([]);
 });
