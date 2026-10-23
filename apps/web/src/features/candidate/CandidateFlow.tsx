@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { getDemoQuestions, interests, roles } from './demo';
 import type { DemoQuestion, QuestionId, RoleId } from './demo';
+import type { Campaign } from '../delivery/model';
 
 interface Answer {
   text: string;
@@ -12,6 +13,8 @@ interface Answer {
 }
 
 interface CandidateState {
+  campaign: Campaign;
+  base: string;
   role: RoleId;
   selectedInterests: string[];
   agreed: boolean;
@@ -27,15 +30,22 @@ interface CandidateState {
 }
 
 const CandidateContext = createContext<CandidateState | null>(null);
-const base = '/candidate/demo';
 
-export function CandidateFlowProvider({ children }: { children: ReactNode }) {
-  const [role, setRoleValue] = useState<RoleId>('designer');
+export function CandidateFlowProvider({
+  children,
+  campaign,
+}: {
+  children: ReactNode;
+  campaign: Campaign;
+}) {
+  const [role, setRoleValue] = useState<RoleId>(campaign.initialRole);
   const [selectedInterests, setInterests] = useState<string[]>([interests[0]!]);
   const [agreed, setAgreed] = useState(false);
   const [answers, setAnswers] = useState<CandidateState['answers']>({});
   const [confirmed, setConfirmed] = useState(false);
   const value: CandidateState = {
+    campaign,
+    base: `/candidate/${campaign.demoInvitationId}`,
     role,
     selectedInterests,
     agreed,
@@ -78,7 +88,7 @@ export function CandidateFlowProvider({ children }: { children: ReactNode }) {
       setConfirmed(true);
     },
     reset() {
-      setRoleValue('designer');
+      setRoleValue(campaign.initialRole);
       setInterests([interests[0]!]);
       setAgreed(false);
       setAnswers({});
@@ -88,7 +98,7 @@ export function CandidateFlowProvider({ children }: { children: ReactNode }) {
   return <CandidateContext.Provider value={value}>{children}</CandidateContext.Provider>;
 }
 
-function useCandidate() {
+export function useCandidate() {
   const value = useContext(CandidateContext);
   if (!value) throw new Error('Candidate flow requires its provider');
   return value;
@@ -112,6 +122,7 @@ function AudioButton({ children }: { children: ReactNode }) {
 
 export function CandidateCheck() {
   const state = useCandidate();
+  const { base } = state;
   return (
     <section className="card candidate-card">
       <p className="eyebrow">YOUR INTERESTS</p>
@@ -195,6 +206,7 @@ export function CandidateCheck() {
 
 export function Conversation() {
   const state = useCandidate();
+  const { base } = state;
   const [params] = useSearchParams();
   const questions = getDemoQuestions(state.role, state.selectedInterests);
   const requested = params.get('question');
@@ -223,6 +235,7 @@ function QuestionPanel({
   returning: boolean;
 }) {
   const state = useCandidate();
+  const { base } = state;
   const navigate = useNavigate();
   const saved = state.answers[question.id];
   const [draft, setDraft] = useState(saved?.text ?? '');
@@ -323,6 +336,7 @@ function SummaryAnswer({
   answer: Answer | undefined;
 }) {
   const state = useCandidate();
+  const { base } = state;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(answer?.supplement ?? '');
   return (
@@ -405,6 +419,7 @@ function SummaryAnswer({
 
 export function CandidateSummary() {
   const state = useCandidate();
+  const { base } = state;
   const navigate = useNavigate();
   const questions = getDemoQuestions(state.role, state.selectedInterests);
   const answered = questions.filter((item) => state.answers[item.id]).length;
@@ -450,24 +465,86 @@ export function CandidateSummary() {
         </p>
       )}
       <div className="summary-confirm">
-        <p>この内容でよければ、確認を完了してください。企業への送信や応募は行いません。</p>
+        <p>要約を整えたら、提出先と内容を確認してください。まだ企業には送信しません。</p>
         <button
           className="button primary full-width"
           disabled={answered < questions.length}
           onClick={() => {
-            state.confirm();
-            navigate(`${base}/complete`);
+            navigate(`${base}/review`);
           }}
         >
-          この内容で確認を完了する →
+          提出内容の確認へ進む →
         </button>
       </div>
     </section>
   );
 }
 
+export function CandidateReview() {
+  const state = useCandidate();
+  const { base, campaign } = state;
+  const navigate = useNavigate();
+  const [unavailable, setUnavailable] = useState(false);
+  const questions = getDemoQuestions(state.role, state.selectedInterests);
+  const allAnswered = questions.every((question) => state.answers[question.id]);
+  if (!allAnswered || !state.agreed) return <Navigate to={`${base}/summary`} replace />;
+  return (
+    <section className="card candidate-card submission-page">
+      <p className="eyebrow">REVIEW BEFORE SUBMISSION</p>
+      <h1 tabIndex={-1}>提出先と内容を確認してください</h1>
+      <dl className="submission-destination">
+        <div>
+          <dt>提出先</dt>
+          <dd>{campaign.companyName}</dd>
+        </div>
+        <div>
+          <dt>対象</dt>
+          <dd>{campaign.title}</dd>
+        </div>
+        <div>
+          <dt>内容</dt>
+          <dd>仕事の希望・4問の回答・要約・補足</dd>
+        </div>
+      </dl>
+      <p>
+        本番では、あなたが確認した内容をこの企業の採用担当者に提出します。提出後は受領状況を確認できるようにします。
+      </p>
+      <div className="info-box">
+        <strong>現在、企業への提出は利用できません</strong>
+        <p>APIが未接続です。提出ボタンを押しても保存・送信せず、提出済みにはなりません。</p>
+      </div>
+      <button className="button primary full-width" onClick={() => setUnavailable(true)}>
+        この内容を企業に提出する
+      </button>
+      {unavailable && (
+        <p className="feedback" role="status">
+          現在利用できません。{campaign.companyName}
+          への送信は行っていません。要約に戻って内容を引き続き修正できます。
+        </p>
+      )}
+      <div className="demo-entry">
+        <span className="badge">画面確認用</span>
+        <p>送信せずに、フローの最後の画面を確認できます。</p>
+        <button
+          className="button secondary full-width"
+          onClick={() => {
+            state.confirm();
+            navigate(`${base}/complete`);
+          }}
+        >
+          送信せず完了画面を確認する →
+        </button>
+      </div>
+      <Link className="back-link" to={`${base}/summary`}>
+        ← 要約を見直す
+      </Link>
+    </section>
+  );
+}
+
 export function Complete() {
   const state = useCandidate();
+  const { base } = state;
   const [restarting, setRestarting] = useState(false);
   if (restarting) return <Navigate to={base} replace />;
   if (!state.confirmed) return <Navigate to={`${base}/summary`} replace />;
@@ -479,7 +556,7 @@ export function Complete() {
       <p className="eyebrow spaced">PREVIEW COMPLETE</p>
       <h1 tabIndex={-1}>お話の内容を確認しました</h1>
       <p className="muted">
-        ダミー回答の入力から、要約の訂正・補足までを確認できました。
+        受検から提出前までのデモが完了しました。企業への提出は完了していません。
         <br />
         面談の送信・応募・録音は行っていません。
       </p>
@@ -495,8 +572,8 @@ export function Complete() {
       >
         最初からもう一度試す
       </button>
-      <Link className="back-link" to="/">
-        企業側のサンプル画面へ →
+      <Link className="back-link" to={`/careers/${state.campaign.companySlug}`}>
+        {state.campaign.companyName}の採用サイトへ戻る →
       </Link>
     </section>
   );

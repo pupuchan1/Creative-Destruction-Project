@@ -69,7 +69,8 @@ test('role-specific sample answers can be reviewed, retried and supplemented wit
     'チーム制作で検索画面の実装と操作テストを担当しました。',
   );
 
-  await page.getByRole('button', { name: 'この内容で確認を完了する' }).click();
+  await page.getByRole('button', { name: '提出内容の確認へ進む' }).click();
+  await page.getByRole('button', { name: '送信せず完了画面を確認する' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('お話の内容を確認しました');
   await page.getByRole('link', { name: '要約をもう一度見る' }).click();
   await expect(experience.locator('.supplement-result')).toContainText(
@@ -82,7 +83,7 @@ test('missing answers cannot be confirmed, and reloading does not fabricate answ
 }) => {
   await page.goto('/candidate/demo/complete');
   await expect(page).toHaveURL('/candidate/demo/summary');
-  await expect(page.getByRole('button', { name: 'この内容で確認を完了する' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: '提出内容の確認へ進む' })).toBeDisabled();
   await expect(page.getByText('未回答', { exact: true })).toHaveCount(4);
   await start(page);
   await expect(page.getByRole('button', { name: 'この回答で次へ' })).toBeDisabled();
@@ -94,7 +95,7 @@ test('missing answers cannot be confirmed, and reloading does not fabricate answ
   await page.getByRole('button', { name: 'この回答で次へ' }).click();
   await page.getByRole('link', { name: 'ここまでの要約を見る' }).click();
   await expect(page.getByText('未回答', { exact: true })).toHaveCount(3);
-  await expect(page.getByRole('button', { name: 'この内容で確認を完了する' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: '提出内容の確認へ進む' })).toBeDisabled();
   await page.getByRole('link', { name: '仕事の希望を見直す' }).click();
   await page.getByRole('radio', { name: /まだ決まっていない/ }).check();
   await page.getByRole('link', { name: '対話画面へ進む' }).click();
@@ -104,5 +105,5 @@ test('missing answers cannot be confirmed, and reloading does not fabricate answ
   );
   await page.reload();
   await expect(page.getByText('未回答', { exact: true })).toHaveCount(4);
-  await expect(page.getByRole('button', { name: 'この内容で確認を完了する' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: '提出内容の確認へ進む' })).toBeDisabled();
 });

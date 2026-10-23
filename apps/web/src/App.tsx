@@ -9,7 +9,17 @@ import {
   Conversation,
   CandidateSummary,
   Complete,
+  CandidateReview,
+  useCandidate,
 } from './features/candidate/CandidateFlow';
+import { findDemoInvitation } from './features/delivery/model';
+import {
+  CandidateBrand,
+  CareersExample,
+  CampaignLanding,
+  IntegrationSettings,
+  InvalidInvitation,
+} from './features/delivery/DeliveryPages';
 
 function Brand() {
   return (
@@ -93,6 +103,7 @@ function AdminLayout() {
           </NavLink>
           <NavLink to="/jobs">求人・質問設定</NavLink>
           <NavLink to="/interviews">面談一覧</NavLink>
+          <NavLink to="/settings/integration">サイトへの設置</NavLink>
           <NavLink to="/settings/members">メンバー・権限</NavLink>
         </nav>
         <div className="header-actions">
@@ -186,8 +197,8 @@ function Overview() {
           title="採用の、今を見渡す。"
           description="候補者との対話と、次のアクションをひとつの場所に。"
         >
-          <Link className="button primary" to="/interviews/invite">
-            候補者を招待 <span aria-hidden="true">↗</span>
+          <Link className="button primary" to="/settings/integration">
+            採用サイトに設置 <span aria-hidden="true">↗</span>
           </Link>
         </Heading>
         <div className="overview-note">
@@ -362,7 +373,7 @@ function Invite() {
       <Heading
         eyebrow="INVITATION"
         title="候補者を招待"
-        description="求人を選び、候補者との対話の入口を用意します。"
+        description="企業と求人に紐づく、ご本人専用の受検リンクを用意します。"
       />
       <div className="two-columns">
         <section className="card form-card">
@@ -372,7 +383,9 @@ function Invite() {
           </select>
           <div className="info-box">
             <strong>招待リンクはまだ発行できません</strong>
-            <p>API接続後に、有効期限付きの招待リンクを発行します。</p>
+            <p>
+              API接続後に、企業・求人・候補者を紐づけた有効期限付きリンクを発行します。公開サイトに貼る案内リンクとは別です。
+            </p>
           </div>
           <UnavailableButton className="button primary">招待リンクを発行</UnavailableButton>
         </section>
@@ -401,7 +414,7 @@ function Report() {
       <Heading
         eyebrow="INTERVIEW RECORD"
         title={`${interview.candidate}の面談記録`}
-        description="架空の記録です。音声やAIから生成した結果ではありません。"
+        description="提出後に企業が確認する結果の表示例です。候補者デモとは独立した架空記録です。"
       >
         <span className="badge blue">サンプル記録</span>
       </Heading>
@@ -513,32 +526,41 @@ function Login() {
   );
 }
 
-const candidateSteps = ['ご案内', '仕事の希望', '質問に回答', '要約の確認', '完了'];
+const candidateSteps = ['ご案内', '仕事の希望', '質問に回答', '要約の確認', '提出前確認', '完了'];
 function CandidateLayout() {
   const path = useLocation().pathname;
+  const { invitationId } = useParams();
+  const campaign = findDemoInvitation(invitationId);
+  if (!campaign) return <InvalidInvitation />;
   const step = path.endsWith('/check')
     ? 1
     : path.endsWith('/conversation')
       ? 2
       : path.endsWith('/summary')
         ? 3
-        : path.endsWith('/complete')
+        : path.endsWith('/review')
           ? 4
-          : 0;
+          : path.endsWith('/complete')
+            ? 5
+            : 0;
   return (
-    <CandidateFlowProvider>
+    <CandidateFlowProvider key={invitationId} campaign={campaign}>
       <div className="standalone candidate-shell">
         <a className="skip-link" href="#main">
           本文へ移動
         </a>
         <header>
-          <Brand />
-          <Link className="text-link" to="/">
-            企業画面へ戻る
+          <CandidateBrand />
+          <Link className="text-link" to={`/careers/${campaign.companySlug}`}>
+            採用サイトへ戻る
           </Link>
         </header>
         <main id="main" className={`candidate-main candidate-step-${step}`}>
           <Notice />
+          <div className="candidate-company">
+            <strong>{campaign.companyName}</strong>
+            <span>{campaign.title}</span>
+          </div>
           <ol className="steps" aria-label="面談の流れ">
             {candidateSteps.map((name, i) => (
               <li
@@ -560,11 +582,12 @@ function CandidateLayout() {
 }
 
 function CandidateIntro() {
+  const { campaign, base } = useCandidate();
   return (
     <section className="card candidate-card candidate-intro">
       <div className="candidate-hero">
         <div className="candidate-copy">
-          <span className="badge blue">サンプル株式会社</span>
+          <span className="badge blue">{campaign.companyName}</span>
           <p className="eyebrow spaced">A CONVERSATION ABOUT YOU</p>
           <h1 tabIndex={-1}>
             あなたの経験を、
@@ -575,7 +598,7 @@ function CandidateIntro() {
           <p>
             やってみたい仕事を選び、4つの質問に回答。お話の要点を次の画面で確認し、伝え足りないことを補足できます。今回はダミー回答で一連の流れを体験できます。
           </p>
-          <Link className="button primary" to="/candidate/demo/check">
+          <Link className="button primary" to={`${base}/check`}>
             利用前の確認へ <span aria-hidden="true">↗</span>
           </Link>
         </div>
@@ -648,13 +671,17 @@ export function App() {
           <Route path="interviews/invite" element={<Invite />} />
           <Route path="interviews/:interviewId/report" element={<Report />} />
           <Route path="settings/members" element={<Members />} />
+          <Route path="settings/integration" element={<IntegrationSettings />} />
           <Route path="*" element={<NotFound />} />
         </Route>
-        <Route path="candidate/demo" element={<CandidateLayout />}>
+        <Route path="careers/:companySlug" element={<CareersExample />} />
+        <Route path="apply/:campaignId" element={<CampaignLanding />} />
+        <Route path="candidate/:invitationId" element={<CandidateLayout />}>
           <Route index element={<CandidateIntro />} />
           <Route path="check" element={<CandidateCheck />} />
           <Route path="conversation" element={<Conversation />} />
           <Route path="summary" element={<CandidateSummary />} />
+          <Route path="review" element={<CandidateReview />} />
           <Route path="complete" element={<Complete />} />
         </Route>
       </Routes>

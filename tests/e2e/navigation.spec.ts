@@ -58,7 +58,8 @@ test('candidate workflow requires acknowledgement and never starts audio or make
       .click();
   }
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('あなたのお話をまとめました');
-  await page.getByRole('button', { name: 'この内容で確認を完了する' }).click();
+  await page.getByRole('button', { name: '提出内容の確認へ進む' }).click();
+  await page.getByRole('button', { name: '送信せず完了画面を確認する' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('お話の内容を確認しました');
   await page.getByRole('button', { name: '最初からもう一度試す' }).click();
   await expect(page).toHaveURL('/candidate/demo');

@@ -37,7 +37,10 @@ test('single-file preview works offline, including an isolated HTML preview', as
   }, html);
   const frame = page.frameLocator('iframe');
   await expect(frame.getByRole('heading', { level: 1 })).toHaveText('採用の、今を見渡す。');
-  await frame.getByRole('link', { name: '候補者の画面を見る' }).click();
+  await frame.getByRole('navigation').getByRole('link', { name: 'サイトへの設置' }).click();
+  await frame.getByRole('link', { name: '採用サイトへの設置例を見る' }).click();
+  await frame.getByRole('link', { name: '事前ヒアリングへ進む' }).click();
+  await frame.getByRole('link', { name: 'ダミーの受検リンクで試す' }).click();
   await expect(frame.getByRole('heading', { level: 1 })).toContainText('あなたの経験を、');
   await frame.getByRole('link', { name: '利用前の確認へ' }).click();
   await frame.getByRole('checkbox', { name: '画面確認用の説明を確認しました' }).check();
