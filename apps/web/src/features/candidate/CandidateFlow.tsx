@@ -4,6 +4,7 @@ import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { getDemoQuestions, interests, roles } from './demo';
 import type { DemoQuestion, QuestionId, RoleId } from './demo';
 import type { Campaign } from '../delivery/model';
+import { LiveTranscriptDemo } from './LiveTranscriptDemo';
 
 interface Answer {
   text: string;
@@ -174,6 +175,18 @@ export function CandidateCheck() {
         </p>
       </div>
       <AudioButton>マイクを確認</AudioButton>
+      <section className="interview-guidance" aria-label="音声・カメラと回答のご案内">
+        <h2>音声・カメラと回答について</h2>
+        <p>
+          今回はマイク・カメラを使わずに体験できます。質問画面では、文字起こしが少しずつ表示されるデモを試せます。
+        </p>
+        <p>
+          実際の受検では、AIや資料を使える範囲、カメラの要否、録画・保存の有無を開始前にご案内する設計です。カメラを利用できない場合の相談方法も用意します。
+        </p>
+        <p className="muted">
+          カメラ必須の条件は検討中です。このデモで撮影・録画・視線の追跡は行いません。
+        </p>
+      </section>
       <div className="consent">
         <h2>利用前の確認</h2>
         <p>
@@ -282,6 +295,7 @@ function QuestionPanel({
           ダミー回答を入力
         </button>
       </div>
+      <LiveTranscriptDemo sample={question.sample} onApply={setDraft} />
       <label className="answer-label" htmlFor="candidate-answer">
         この質問への回答
       </label>

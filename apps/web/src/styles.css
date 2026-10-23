@@ -1992,3 +1992,89 @@ blockquote {
     font-size: 11px;
   }
 }
+
+.live-transcript {
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--blue);
+  padding: 24px;
+  margin: 0 0 28px;
+}
+.transcript-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+}
+.transcript-heading h2 {
+  font-size: 18px;
+  margin: 0;
+}
+.transcript-heading .eyebrow {
+  margin-bottom: 8px;
+}
+.transcript-help {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 14px 0;
+}
+.transcript-status {
+  color: var(--blue);
+  font-size: 11px;
+  min-height: 2em;
+  margin: 16px 0 10px;
+}
+.transcript-output {
+  background: var(--soft);
+  padding: 18px;
+  min-height: 140px;
+  font-size: 14px;
+  line-height: 2;
+  overflow-wrap: anywhere;
+}
+.interim-transcript {
+  color: #68738a;
+  text-decoration: underline dotted;
+  text-underline-offset: 5px;
+}
+.transcript-legend {
+  color: var(--muted);
+  font-size: 10px;
+  margin: 10px 0 0;
+}
+.transcript-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+.transcript-controls .button {
+  font-size: 11px;
+  min-height: 42px;
+}
+.interview-guidance {
+  padding: 24px 0;
+  margin-top: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.interview-guidance h2 {
+  font-size: 17px;
+  margin-bottom: 14px;
+}
+.interview-guidance p {
+  font-size: 12px;
+  margin-top: 10px;
+}
+@media (max-width: 760px) {
+  .live-transcript {
+    padding: 20px 16px;
+  }
+  .transcript-heading h2 {
+    font-size: 17px;
+  }
+  .transcript-output {
+    padding: 15px;
+    font-size: 13px;
+  }
+}

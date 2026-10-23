@@ -50,7 +50,9 @@ test('candidate workflow requires acknowledgement and never starts audio or make
   await page.getByRole('checkbox', { name: '画面確認用の説明を確認しました' }).check();
   await page.getByRole('link', { name: '対話画面へ進む' }).click();
   await page.getByRole('button', { name: '音声対話を開始' }).click();
-  await expect(page.getByRole('status')).toContainText('現在利用できません');
+  await expect(page.getByRole('status').filter({ hasText: '音声機能' })).toContainText(
+    '現在利用できません',
+  );
   for (let index = 0; index < 4; index++) {
     await page.getByRole('button', { name: 'ダミー回答を入力' }).click();
     await page
